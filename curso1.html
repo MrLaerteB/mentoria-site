@@ -101,17 +101,26 @@ onAuthStateChanged(auth, async (user) => {
 
     const div = document.createElement("div");
 
-    div.innerHTML = `
-      <button onclick="trocarVideo('${aula.videoId}', '${aulaId}')">
-        ${aula.titulo}
-      </button>
-      <span id="check-${aulaId}">${assistida ? "✅" : ""}</span>
-      <br><br>
-    `;
+    const button = document.createElement("button");
+    button.innerText = aula.titulo;
+
+    // ✅ EVENTO CORRETO
+    button.addEventListener("click", () => {
+      trocarVideo(aula.videoId, aulaId);
+    });
+
+    const check = document.createElement("span");
+    check.id = "check-" + aulaId;
+    check.innerText = assistida ? "✅" : "";
+
+    div.appendChild(button);
+    div.appendChild(check);
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
 
     lista.appendChild(div);
 
-    // 👉 carrega automaticamente a primeira aula
+    // primeira aula automática
     if (primeiraAula && aula.videoId) {
       document.getElementById("player").src =
         "https://www.youtube.com/embed/" + aula.videoId;
@@ -137,7 +146,7 @@ function atualizarProgresso(total, assistidas) {
 
 }
 
-window.trocarVideo = async function(videoId, aulaId) {
+async function trocarVideo(videoId, aulaId) {
 
   document.getElementById("player").src =
     "https://www.youtube.com/embed/" + videoId;
