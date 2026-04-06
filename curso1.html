@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Curso</title>
+</head>
+
+<body>
+
+<h1>Curso</h1>
+
+<p id="user"></p>
+<h3 id="progressoTexto"></h3>
+
+<iframe id="player" width="800" height="450"
+  src=""
+  frameborder="0"
+  allowfullscreen>
+</iframe>
+
+<h2>Aulas</h2>
+<div id="listaAulas"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
+  authDomain: "anama-5ba78.firebaseapp.com",
+  projectId: "anama-5ba78",
+  storageBucket: "anama-5ba78.firebasestorage.app",
+  messagingSenderId: "641533046699",
+  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const cursoId = "curso1";
+
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("user").innerText =
+    "Logado como: " + user.email;
+
+  const lista = document.getElementById("listaAulas");
+  lista.innerHTML = "";
+
+  let progresso = {};
+
+  const progressoRef = doc(db, "progresso", user.uid);
+  const progressoSnap = await getDoc(progressoRef);
+
+  if (progressoSnap.exists()) {
+    progresso = progressoSnap.data();
+  }
+
+  const aulasRef = collection(db, "cursos", cursoId, "aulas");
+  const q = query(aulasRef, orderBy("ordem"));
+
+  const snapshot = await getDocs(q);
+
+  let total = 0;
+  let assistidas = 0;
+  let primeiraAula = true;
+
+  snapshot.forEach((docSnap) => {
+
+    total++;
+
+    const aula = docSnap.data();
+    const aulaId = docSnap.id;
+
+    const assistida = progresso[cursoId + "_" + aulaId];
+
+    if (assistida) assistidas++;
+
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <button onclick="trocarVideo('${aula.videoId}', '${aulaId}')">
+        ${aula.titulo}
+      </button>
+      <span id="check-${aulaId}">${assistida ? "✅" : ""}</span>
+      <br><br>
+    `;
+
+    lista.appendChild(div);
+
+    // 👉 carrega automaticamente a primeira aula
+    if (primeiraAula && aula.videoId) {
+      document.getElementById("player").src =
+        "https://www.youtube.com/embed/" + aula.videoId;
+      primeiraAula = false;
+    }
+
+  });
+
+  atualizarProgresso(total, assistidas);
+
+});
+
+function atualizarProgresso(total, assistidas) {
+
+  let porcentagem = 0;
+
+  if (total > 0) {
+    porcentagem = Math.round((assistidas / total) * 100);
+  }
+
+  document.getElementById("progressoTexto").innerText =
+    "Progresso: " + porcentagem + "%";
+
+}
+
+window.trocarVideo = async function(videoId, aulaId) {
+
+  document.getElementById("player").src =
+    "https://www.youtube.com/embed/" + videoId;
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const ref = doc(db, "progresso", user.uid);
+
+  await setDoc(ref, {
+    [cursoId + "_" + aulaId]: true
+  }, { merge: true });
+
+  document.getElementById("check-" + aulaId).innerText = "✅";
+
+  location.reload();
+
+}
+
+</script>
+
+</body>
+</html>

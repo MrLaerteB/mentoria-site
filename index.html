@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+</head>
+
+<body>
+
+<h2>Login</h2>
+
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="senha" placeholder="Senha"><br><br>
+
+<button onclick="login()">Entrar</button>
+
+<p id="erro" style="color:red;"></p>
+
+<script type="module" console.log("CONFIG:", firebaseConfig);>
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
+  authDomain: "anama-5ba78.firebaseapp.com",
+  projectId: "anama-5ba78",
+  storageBucket: "anama-5ba78.firebasestorage.app",
+  messagingSenderId: "641533046699",
+  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.login = function () {
+
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("senha").value;
+
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+      return signInWithEmailAndPassword(auth, email, senha);
+    })
+    .then(() => {
+      window.location.href = "cursos.html";
+    })
+    .catch((error) => {
+      console.error(error);
+      document.getElementById("erro").innerText = error.message;
+    });
+
+}
+
+</script>
+
+</body>
+</html>
