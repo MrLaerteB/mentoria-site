@@ -3,6 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <title>Cursos</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    .curso-card {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      max-width: 400px;
+    }
+
+    .curso-titulo {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      cursor: pointer;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+    }
+
+    .btn:hover {
+      background: #0056b3;
+    }
+  </style>
+
 </head>
 <body>
 
@@ -11,23 +46,27 @@
 <div id="conteudo" style="display:none;">
 
   <h1>Meus Cursos</h1>
-
   <p id="user"></p>
 
-  <button onclick="abrirCurso('curso1')">
-    Curso Descomplicando os Cálculos
-  </button>
+  <div class="curso-card">
+    <div class="curso-titulo">
+      Curso Descomplicando os Cálculos
+    </div>
 
-  <br><br>
+    <button class="btn" id="btnCurso1">
+      Acessar curso
+    </button>
+  </div>
 
-  <button onclick="logout()">Sair</button>
+  <br>
+
+  <button class="btn" id="btnLogout">Sair</button>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-
 import {
   getAuth,
   onAuthStateChanged,
@@ -46,7 +85,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// 🔐 proteção de rota
 onAuthStateChanged(auth, (user) => {
 
   if (!user) {
@@ -62,16 +100,17 @@ onAuthStateChanged(auth, (user) => {
 
 });
 
-// ▶ abrir curso
-window.abrirCurso = function (cursoId) {
-  window.location.href = cursoId + ".html";
-};
+// eventos (sem onclick)
+document.getElementById("btnCurso1")
+  .addEventListener("click", () => {
+    window.location.href = "curso1.html";
+  });
 
-// 🔴 logout
-window.logout = async function () {
-  await signOut(auth);
-  window.location.href = "index.html";
-};
+document.getElementById("btnLogout")
+  .addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "index.html";
+  });
 
 </script>
 
