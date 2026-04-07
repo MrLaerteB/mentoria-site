@@ -162,7 +162,7 @@ async function trocarVideo(videoId, aulaId) {
 
   document.getElementById("check-" + aulaId).innerText = "✅";
 
-  location.reload();
+  atualizarProgresso(total, assistidas + 1);
 
 }
 

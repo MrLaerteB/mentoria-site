@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Validador de Vídeo</title>
+</head>
+
+<body>
+
+<h2>Validar vídeo do YouTube</h2>
+
+<input id="input" placeholder="Cole o link ou ID">
+<button onclick="validar()">Validar</button>
+
+<p id="resultado"></p>
+
+<iframe id="teste" width="400" height="250"></iframe>
+
+<script>
+
+function extrairID(link) {
+
+  if (link.includes("youtu.be")) {
+    return link.split("youtu.be/")[1];
+  }
+
+  if (link.includes("v=")) {
+    return link.split("v=")[1].split("&")[0];
+  }
+
+  return link; // já é ID
+}
+
+function validar() {
+
+  const input = document.getElementById("input").value;
+  const id = extrairID(input);
+
+  const iframe = document.getElementById("teste");
+  const resultado = document.getElementById("resultado");
+
+  iframe.src = "https://www.youtube.com/embed/" + id;
+
+  resultado.innerText = "Testando...";
+
+  setTimeout(() => {
+
+    try {
+      const erro = iframe.contentWindow.location.href;
+
+      resultado.innerText = "❌ Provavelmente BLOQUEADO (erro 153)";
+    } catch (e) {
+      resultado.innerText = "✅ Vídeo OK (pode usar)";
+    }
+
+  }, 2000);
+
+}
+
+</script>
+
+</body>
+</html>
