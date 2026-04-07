@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
   <meta charset="UTF-8">
   <title>Login</title>
 </head>
-
 <body>
 
 <h2>Login</h2>
@@ -17,7 +15,7 @@
 
 <p id="erro" style="color:red;"></p>
 
-<script type="module" console.log("CONFIG:", firebaseConfig);>
+<script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 
@@ -28,36 +26,38 @@ import {
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
+// 🔧 CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
-  authDomain: "anama-5ba78.firebaseapp.com",
-  projectId: "anama-5ba78",
-  storageBucket: "anama-5ba78.firebasestorage.app",
-  messagingSenderId: "641533046699",
-  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
+  apiKey: "SUA_KEY",
+  authDomain: "SEU_DOMINIO",
+  projectId: "SEU_PROJECT_ID",
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-window.login = function () {
+// 🔐 LOGIN CORRETO
+window.login = async function () {
 
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
 
-  setPersistence(auth, browserLocalPersistence)
-    .then(() => {
-      return signInWithEmailAndPassword(auth, email, senha);
-    })
-    .then(() => {
-      window.location.href = "cursos.html";
-    })
-    .catch((error) => {
-      console.error(error);
-      document.getElementById("erro").innerText = error.message;
-    });
+  try {
 
-}
+    // 🔴 GARANTE SESSÃO ENTRE PÁGINAS
+    await setPersistence(auth, browserLocalPersistence);
+
+    // 🔴 LOGIN
+    await signInWithEmailAndPassword(auth, email, senha);
+
+    // 🔴 REDIRECIONA SÓ DEPOIS
+    window.location.href = "curso1.html";
+
+  } catch (error) {
+    document.getElementById("erro").innerText = error.message;
+  }
+
+};
 
 </script>
 
