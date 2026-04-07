@@ -8,37 +8,49 @@
     body {
       font-family: Arial;
       padding: 20px;
+      background: #f5f5f5;
+      margin: 0;
+    }
+
+    h1 {
+      margin-top: 0;
     }
 
     .curso-card {
-      border: 1px solid #ccc;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 800px;
     }
 
     .curso-titulo {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: bold;
       margin-bottom: 10px;
     }
 
+    .curso-descricao {
+      color: #555;
+      margin-bottom: 15px;
+    }
+
     .btn {
-      padding: 8px 12px;
-      cursor: pointer;
+      padding: 8px 14px;
       border: none;
       background: #007bff;
       color: white;
-      border-radius: 5px;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .btn:hover {
       background: #0056b3;
     }
   </style>
-
 </head>
+
 <body>
 
 <div id="loading">Carregando...</div>
@@ -48,17 +60,7 @@
   <h1>Meus Cursos</h1>
   <p id="user"></p>
 
-  <div class="curso-card">
-    <div class="curso-titulo">
-      Curso Descomplicando os Cálculos
-    </div>
-
-    <button class="btn" id="btnCurso1">
-      Acessar curso
-    </button>
-  </div>
-
-  <br>
+  <div id="listaCursos"></div>
 
   <button class="btn" id="btnLogout">Sair</button>
 
@@ -67,11 +69,18 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+
 import {
   getAuth,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
@@ -84,8 +93,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
     window.location.href = "index.html";
@@ -98,19 +108,56 @@ onAuthStateChanged(auth, (user) => {
   document.getElementById("user").innerText =
     "Logado como: " + user.email;
 
+  carregarCursos();
+
 });
 
-// eventos (sem onclick)
-document.getElementById("btnCurso1")
-  .addEventListener("click", () => {
-    window.location.href = "curso1.html";
+// 🔥 CARREGAR CURSOS DINÂMICOS
+async function carregarCursos() {
+
+  const lista = document.getElementById("listaCursos");
+  lista.innerHTML = "";
+
+  const snapshot = await getDocs(collection(db, "cursos"));
+
+  snapshot.forEach((docSnap) => {
+
+    const curso = docSnap.data();
+    const cursoId = docSnap.id;
+
+    const card = document.createElement("div");
+    card.className = "curso-card";
+
+    const titulo = document.createElement("div");
+    titulo.className = "curso-titulo";
+    titulo.innerText = curso.nome || "Sem nome";
+
+    const descricao = document.createElement("div");
+    descricao.className = "curso-descricao";
+    descricao.innerText = curso.descricao || "";
+
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.innerText = "Entrar no curso";
+
+    btn.addEventListener("click", () => {
+      window.location.href = cursoId + ".html";
+    });
+
+    card.appendChild(titulo);
+    card.appendChild(descricao);
+    card.appendChild(btn);
+
+    lista.appendChild(card);
+
   });
 
-document.getElementById("btnLogout")
-  .addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.href = "index.html";
-  });
+}
+
+document.getElementById("btnLogout").addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "index.html";
+});
 
 </script>
 
