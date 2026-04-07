@@ -11,7 +11,7 @@
 <input type="email" id="email" placeholder="Email"><br><br>
 <input type="password" id="senha" placeholder="Senha"><br><br>
 
-<button onclick="login()">Entrar</button>
+<button id="btnLogin">Entrar</button>
 
 <p id="erro" style="color:red;"></p>
 
@@ -26,7 +26,6 @@ import {
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-// 🔧 CONFIG
 const firebaseConfig = {
   apiKey: "SUA_KEY",
   authDomain: "SEU_DOMINIO",
@@ -36,28 +35,35 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// 🔐 LOGIN CORRETO
-window.login = async function () {
+// 🔴 BOTÃO (evita problemas de escopo)
+document.getElementById("btnLogin").addEventListener("click", async () => {
 
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
 
   try {
 
-    // 🔴 GARANTE SESSÃO ENTRE PÁGINAS
+    document.getElementById("erro").innerText = "Entrando...";
+
+    // 🔴 PASSO 1 (OBRIGATÓRIO)
     await setPersistence(auth, browserLocalPersistence);
 
-    // 🔴 LOGIN
+    // 🔴 PASSO 2
     await signInWithEmailAndPassword(auth, email, senha);
 
-    // 🔴 REDIRECIONA SÓ DEPOIS
+    // 🔴 PASSO 3
     window.location.href = "curso1.html";
 
   } catch (error) {
-    document.getElementById("erro").innerText = error.message;
+
+    console.error(error);
+
+    document.getElementById("erro").innerText =
+      "Erro: " + error.message;
+
   }
 
-};
+});
 
 </script>
 
