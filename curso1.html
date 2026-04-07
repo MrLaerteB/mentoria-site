@@ -13,6 +13,7 @@
 <p id="user"></p>
 <h3 id="progressoTexto"></h3>
 
+<!-- PLAYER ÚNICO E CORRETO -->
 <iframe 
   id="player"
   width="800"
@@ -46,12 +47,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
-  authDomain: "anama-5ba78.firebaseapp.com",
-  projectId: "anama-5ba78",
-  storageBucket: "anama-5ba78.firebasestorage.app",
-  messagingSenderId: "641533046699",
-  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
+  apiKey: "SUA_KEY",
+  authDomain: "SEU_DOMINIO",
+  projectId: "SEU_PROJECT_ID",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -60,7 +58,6 @@ const db = getFirestore(app);
 
 const cursoId = "curso1";
 
-// 👉 variáveis globais para corrigir bug
 let total = 0;
 let assistidas = 0;
 
@@ -127,10 +124,16 @@ onAuthStateChanged(auth, async (user) => {
 
     lista.appendChild(div);
 
+    // 🔥 PRIMEIRA AULA AUTOMÁTICA (corrigido e seguro)
     if (primeiraAula && aula.videoId) {
-      document.getElementById("player").src =
-        "https://www.youtube.com/embed/" + aula.videoId;
-      primeiraAula = false;
+
+      const player = document.getElementById("player");
+
+      if (player) {
+        player.src = getEmbedUrl(aula.videoId);
+        primeiraAula = false;
+      }
+
     }
 
   });
@@ -138,6 +141,21 @@ onAuthStateChanged(auth, async (user) => {
   atualizarProgresso();
 
 });
+
+// 🔥 CENTRALIZA A URL (evita erro futuro)
+function getEmbedUrl(videoId) {
+
+  // proteção contra erro de banco
+  if (!videoId) return "";
+
+  // remove caso alguém salve URL completa
+  if (videoId.includes("youtube.com")) {
+    const match = videoId.match(/v=([^&]+)/);
+    if (match) videoId = match[1];
+  }
+
+  return "https://www.youtube.com/embed/" + videoId;
+}
 
 function atualizarProgresso() {
 
@@ -154,8 +172,14 @@ function atualizarProgresso() {
 
 async function trocarVideo(videoId, aulaId) {
 
-  document.getElementById("player").src =
-    "https://www.youtube.com/embed/" + videoId;
+  const player = document.getElementById("player");
+
+  if (!player) {
+    console.error("Player não encontrado");
+    return;
+  }
+
+  player.src = getEmbedUrl(videoId);
 
   const user = auth.currentUser;
   if (!user) return;
@@ -166,7 +190,6 @@ async function trocarVideo(videoId, aulaId) {
     [cursoId + "_" + aulaId]: true
   }, { merge: true });
 
-  // evita duplicar contagem
   const check = document.getElementById("check-" + aulaId);
 
   if (check.innerText !== "✅") {
