@@ -16,6 +16,7 @@
 <iframe id="player" width="800" height="450"
   src=""
   frameborder="0"
+  allow="autoplay; encrypted-media"
   allowfullscreen>
 </iframe>
 
@@ -57,6 +58,10 @@ const db = getFirestore(app);
 
 const cursoId = "curso1";
 
+// 👉 variáveis globais para corrigir bug
+let total = 0;
+let assistidas = 0;
+
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -84,8 +89,9 @@ onAuthStateChanged(auth, async (user) => {
 
   const snapshot = await getDocs(q);
 
-  let total = 0;
-  let assistidas = 0;
+  total = 0;
+  assistidas = 0;
+
   let primeiraAula = true;
 
   snapshot.forEach((docSnap) => {
@@ -104,7 +110,6 @@ onAuthStateChanged(auth, async (user) => {
     const button = document.createElement("button");
     button.innerText = aula.titulo;
 
-    // ✅ EVENTO CORRETO
     button.addEventListener("click", () => {
       trocarVideo(aula.videoId, aulaId);
     });
@@ -120,7 +125,6 @@ onAuthStateChanged(auth, async (user) => {
 
     lista.appendChild(div);
 
-    // primeira aula automática
     if (primeiraAula && aula.videoId) {
       document.getElementById("player").src =
         "https://www.youtube.com/embed/" + aula.videoId;
@@ -129,11 +133,11 @@ onAuthStateChanged(auth, async (user) => {
 
   });
 
-  atualizarProgresso(total, assistidas);
+  atualizarProgresso();
 
 });
 
-function atualizarProgresso(total, assistidas) {
+function atualizarProgresso() {
 
   let porcentagem = 0;
 
@@ -160,9 +164,14 @@ async function trocarVideo(videoId, aulaId) {
     [cursoId + "_" + aulaId]: true
   }, { merge: true });
 
-  document.getElementById("check-" + aulaId).innerText = "✅";
+  // evita duplicar contagem
+  const check = document.getElementById("check-" + aulaId);
 
-  atualizarProgresso(total, assistidas + 1);
+  if (check.innerText !== "✅") {
+    check.innerText = "✅";
+    assistidas++;
+    atualizarProgresso();
+  }
 
 }
 
