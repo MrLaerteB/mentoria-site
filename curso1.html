@@ -76,7 +76,14 @@
 
 <p id="user"></p>
 
-<iframe id="player" width="100%" height="450"></iframe>
+<iframe 
+  id="player"
+  width="100%" 
+  height="450"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen>
+</iframe>
 
 <h2>Aulas</h2>
 <div id="listaAulas"></div>
@@ -190,7 +197,7 @@ async function carregarAulas(user) {
 
     if (primeira && videoId) {
       document.getElementById("player").src =
-        "https://www.youtube.com/embed/" + videoId;
+  "https://www.youtube.com/embed/" + videoId + "?rel=0&modestbranding=1";
       primeira = false;
     }
 
