@@ -2,61 +2,67 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Cursos</title>
+  <title>Login</title>
 
   <style>
     body {
       font-family: Arial;
-      padding: 20px;
       background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
     }
 
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-
-    .curso-card {
+    .box {
       background: white;
+      padding: 30px;
       border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .curso-titulo {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 10px;
+    input {
+      padding: 10px;
+      font-size: 14px;
     }
 
-    .curso-descricao {
-      color: #555;
-      margin-bottom: 15px;
-    }
-
-    .btn {
-      padding: 10px 16px;
-      border: none;
+    button {
+      padding: 10px;
       background: #007bff;
       color: white;
-      border-radius: 6px;
+      border: none;
       cursor: pointer;
-      min-height: 40px;
+      border-radius: 5px;
     }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #erro {
+      color: red;
+      font-size: 13px;
+    }
+
   </style>
 </head>
 
 <body>
 
-<div id="loading">Carregando...</div>
+<div class="box">
+  <h2>Login</h2>
 
-<div id="conteudo" style="display:none;" class="container">
-  <h1>Meus Cursos</h1>
-  <p id="user"></p>
-  <div id="listaCursos"></div>
-  <button class="btn" id="btnLogout">Sair</button>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="senha" placeholder="Senha">
+
+  <button id="loginBtn">Entrar</button>
+
+  <div id="erro"></div>
 </div>
 
 <script type="module">
@@ -65,17 +71,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebas
 
 import {
   getAuth,
-  onAuthStateChanged,
-  signOut
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBD...",
@@ -85,84 +85,35 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-onAuthStateChanged(auth, async (user) => {
-
-  console.log("USER:", user);
-
-  if (!user) {
-    console.log("REDIRECIONANDO...");
-    window.location.href = "index.html";
-    return;
+// 🔥 Se já estiver logado, pula direto
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.href = "cursos.html";
   }
-
-  document.getElementById("user").innerText =
-    "Logado como: " + user.email;
-
-  try {
-    await carregarCursos();
-
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("conteudo").style.display = "block";
-
-  } catch (erro) {
-
-    console.error("Erro ao carregar cursos:", erro);
-
-    document.getElementById("loading").innerText =
-      "Erro ao carregar cursos. Verifique o console.";
-
-  }
-
 });
 
-async function carregarCursos() {
+document.getElementById("loginBtn").addEventListener("click", async () => {
 
-  const lista = document.getElementById("listaCursos");
-  lista.innerHTML = "";
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("senha").value;
+  const erroDiv = document.getElementById("erro");
 
-  const snapshot = await getDocs(
-    query(collection(db, "cursos"), orderBy("ordem"))
-  );
+  erroDiv.innerText = "";
 
-  snapshot.forEach((docSnap) => {
+  try {
 
-    const curso = docSnap.data();
-    const cursoId = docSnap.id;
+    // 🔥 ESSENCIAL: mantém login entre páginas
+    await setPersistence(auth, browserLocalPersistence);
 
-    const card = document.createElement("div");
-    card.className = "curso-card";
+    await signInWithEmailAndPassword(auth, email, senha);
 
-    const titulo = document.createElement("div");
-    titulo.className = "curso-titulo";
-    titulo.innerText = curso.nome || "Sem nome";
+    window.location.href = "cursos.html";
 
-    const descricao = document.createElement("div");
-    descricao.className = "curso-descricao";
-    descricao.innerText = curso.descricao || "";
+  } catch (erro) {
+    erroDiv.innerText = erro.message;
+  }
 
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.innerText = "Entrar no curso";
-
-    btn.addEventListener("click", () => {
-      window.location.href = cursoId + ".html";
-    });
-
-    card.appendChild(titulo);
-    card.appendChild(descricao);
-    card.appendChild(btn);
-
-    lista.appendChild(card);
-
-  });
-
-}
-
-document.getElementById("btnLogout").addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "index.html";
 });
 
 </script>
