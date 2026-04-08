@@ -16,13 +16,17 @@
       margin-top: 0;
     }
 
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
     .curso-card {
       background: white;
       border-radius: 10px;
       padding: 20px;
       margin-bottom: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 800px;
     }
 
     .curso-titulo {
@@ -37,17 +41,19 @@
     }
 
     .btn {
-      padding: 8px 14px;
+      padding: 10px 16px;
       border: none;
       background: #007bff;
       color: white;
       border-radius: 6px;
       cursor: pointer;
+      min-height: 40px;
     }
 
     .btn:hover {
       background: #0056b3;
     }
+
   </style>
 </head>
 
@@ -55,7 +61,7 @@
 
 <div id="loading">Carregando...</div>
 
-<div id="conteudo" style="display:none;">
+<div id="conteudo" style="display:none;" class="container">
 
   <h1>Meus Cursos</h1>
   <p id="user"></p>
@@ -79,11 +85,13 @@ import {
 import {
   getFirestore,
   collection,
-  getDocs
+  getDocs,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
+  apiKey: "AIzaSyBD...",
   authDomain: "anama-5ba78.firebaseapp.com",
   projectId: "anama-5ba78",
   storageBucket: "anama-5ba78.appspot.com",
@@ -112,13 +120,15 @@ onAuthStateChanged(auth, async (user) => {
 
 });
 
-// 🔥 CARREGAR CURSOS DINÂMICOS
+// 🔥 CARREGAR CURSOS COM ORDEM
 async function carregarCursos() {
 
   const lista = document.getElementById("listaCursos");
   lista.innerHTML = "";
 
-  const snapshot = await getDocs(collection(db, "cursos"));
+  const snapshot = await getDocs(
+    query(collection(db, "cursos"), orderBy("ordem"))
+  );
 
   snapshot.forEach((docSnap) => {
 
