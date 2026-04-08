@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Curso 1</title>
+  <title>Curso</title>
 </head>
 
 <body>
 
-<h1>Curso 1</h1>
+<h1 id="tituloCurso"></h1>
 <p id="user"></p>
 
-<!-- 🔥 PLAYER (isso que faltava) -->
 <iframe id="player" width="600" height="350" allowfullscreen></iframe>
+
+<h3 id="progressoTexto"></h3>
 
 <div id="listaAulas"></div>
 
@@ -21,11 +22,16 @@
 import { auth, db, onAuthStateChanged } from "./firebase.js";
 
 import {
+  doc,
+  getDoc,
   collection,
   getDocs,
   query,
-  orderBy
+  orderBy,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const cursoId = "curso1"; // 🔥 depois podemos dinamizar isso
 
 let timeoutRedirect;
 
@@ -35,9 +41,11 @@ onAuthStateChanged(auth, async (user) => {
 
     clearTimeout(timeoutRedirect);
 
-    document.getElementById("user").innerText = user.email;
+    document.getElementById("user").innerText =
+      "Logado como: " + user.email;
 
-    carregarAulas();
+    await carregarCurso();
+    await carregarAulas(user);
 
   } else {
 
@@ -51,39 +59,87 @@ onAuthStateChanged(auth, async (user) => {
 
 });
 
-async function carregarAulas() {
+async function carregarCurso() {
+
+  const docRef = doc(db, "cursos", cursoId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    document.getElementById("tituloCurso").innerText =
+      docSnap.data().nome;
+  }
+
+}
+
+async function carregarAulas(user) {
 
   const lista = document.getElementById("listaAulas");
   lista.innerHTML = "";
 
   const snapshot = await getDocs(
-    query(collection(db, "cursos", "curso1", "aulas"), orderBy("ordem"))
+    query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem"))
   );
 
-  snapshot.forEach(doc => {
+  let total = 0;
+  let assistidas = 0;
 
-    const aula = doc.data();
+  for (const docSnap of snapshot.docs) {
+
+    const aula = docSnap.data();
+    const aulaId = docSnap.id;
+
+    total++;
+
+    // 🔥 progresso do usuário
+    const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aulaId);
+    const progressoSnap = await getDoc(progressoRef);
+
+    const assistido = progressoSnap.exists();
+
+    if (assistido) assistidas++;
 
     const div = document.createElement("div");
 
-    div.innerText = aula.titulo;
+    div.innerHTML = `
+      <strong>${aula.titulo}</strong>
+      <br>
+      Status: ${assistido ? "✔ Assistido" : "❌ Não assistido"}
+      <br>
+      <button>Assistir</button>
+      <hr>
+    `;
 
-    // 🔥 ESSENCIAL: clique carrega vídeo
-    div.addEventListener("click", () => {
-      carregarVideo(aula.videoId);
+    const btn = div.querySelector("button");
+
+    btn.addEventListener("click", async () => {
+
+      // carrega vídeo
+      document.getElementById("player").src =
+        `https://www.youtube.com/embed/${aula.videoId}`;
+
+      // salva progresso
+      await setDoc(progressoRef, {
+        assistido: true
+      });
+
+      // atualiza status visual
+      div.innerHTML = `
+        <strong>${aula.titulo}</strong>
+        <br>
+        Status: ✔ Assistido
+        <br>
+        <button>Assistir</button>
+        <hr>
+      `;
+
     });
 
     lista.appendChild(div);
 
-  });
+  }
 
-}
-
-function carregarVideo(videoId) {
-
-  const iframe = document.getElementById("player");
-
-  iframe.src = `https://www.youtube.com/embed/${videoId}`;
+  document.getElementById("progressoTexto").innerText =
+    `Progresso: ${assistidas} / ${total}`;
 
 }
 
