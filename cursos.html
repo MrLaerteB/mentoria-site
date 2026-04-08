@@ -12,10 +12,6 @@
       margin: 0;
     }
 
-    h1 {
-      margin-top: 0;
-    }
-
     .container {
       max-width: 900px;
       margin: auto;
@@ -49,11 +45,6 @@
       cursor: pointer;
       min-height: 40px;
     }
-
-    .btn:hover {
-      background: #0056b3;
-    }
-
   </style>
 </head>
 
@@ -62,14 +53,10 @@
 <div id="loading">Carregando...</div>
 
 <div id="conteudo" style="display:none;" class="container">
-
   <h1>Meus Cursos</h1>
   <p id="user"></p>
-
   <div id="listaCursos"></div>
-
   <button class="btn" id="btnLogout">Sair</button>
-
 </div>
 
 <script type="module">
@@ -93,10 +80,7 @@ import {
 const firebaseConfig = {
   apiKey: "AIzaSyBD...",
   authDomain: "anama-5ba78.firebaseapp.com",
-  projectId: "anama-5ba78",
-  storageBucket: "anama-5ba78.appspot.com",
-  messagingSenderId: "641533046699",
-  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
+  projectId: "anama-5ba78"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -110,17 +94,26 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("conteudo").style.display = "block";
-
   document.getElementById("user").innerText =
     "Logado como: " + user.email;
 
-  carregarCursos();
+  try {
+    await carregarCursos();
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("conteudo").style.display = "block";
+
+  } catch (erro) {
+
+    console.error("Erro ao carregar cursos:", erro);
+
+    document.getElementById("loading").innerText =
+      "Erro ao carregar cursos. Verifique o console.";
+
+  }
 
 });
 
-// 🔥 CARREGAR CURSOS COM ORDEM
 async function carregarCursos() {
 
   const lista = document.getElementById("listaCursos");
