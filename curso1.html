@@ -1,257 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
   <meta charset="UTF-8">
   <title>Curso</title>
-
-  <style>
-    body {
-      font-family: Arial;
-      padding: 10px;
-      background: #f5f5f5;
-      margin: 0;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-
-    .btn {
-      padding: 10px 16px;
-      border: none;
-      background: #007bff;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-bottom: 15px;
-      min-height: 40px;
-    }
-
-    .btn:hover {
-      background: #0056b3;
-    }
-
-    /* 🎥 Vídeo responsivo */
-    .video-container {
-      position: relative;
-      width: 100%;
-      padding-bottom: 56.25%;
-      margin-bottom: 20px;
-    }
-
-    .video-container iframe {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    /* 📚 Aula */
-    .aula {
-      background: white;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .aula-titulo {
-      font-weight: bold;
-    }
-
-    .aula-linha {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .aula button {
-      background: #28a745;
-      border: none;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      min-height: 36px;
-    }
-
-    .check {
-      font-size: 18px;
-    }
-
-  </style>
-
 </head>
 
 <body>
 
 <div id="loading">Carregando...</div>
-
-<div id="conteudo" style="display:none;" class="container">
-
-<button class="btn" id="btnVoltar">⬅ Voltar</button>
-
-<h1 id="tituloCurso"></h1>
-
-<p id="user"></p>
-
-<!-- 🎥 PLAYER -->
-<div class="video-container">
-  <iframe 
-    id="player"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-  </iframe>
-</div>
-
-<h2>Aulas</h2>
-<div id="listaAulas"></div>
-
+<div id="conteudo" style="display:none;">
+  <h1>Curso 1</h1>
+  <p id="user"></p>
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { auth, onAuthStateChanged } from "./firebase.js";
 
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+let carregou = false;
 
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+onAuthStateChanged(auth, (user) => {
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
-  authDomain: "anama-5ba78.firebaseapp.com",
-  projectId: "anama-5ba78",
-  storageBucket: "anama-5ba78.firebasestorage.app",
-  messagingSenderId: "641533046699",
-  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
-};
+  console.log("USER CURSO:", user);
 
+  if (user && !carregou) {
+    carregou = true;
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("conteudo").style.display = "block";
 
-const cursoId = "curso1";
-
-onAuthStateChanged(auth, async (user) => {
-
-  if (!user) {
-    window.location.href = "index.html";
-    return;
+    document.getElementById("user").innerText = user.email;
   }
 
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("conteudo").style.display = "block";
-
-  document.getElementById("user").innerText =
-    "Logado como: " + user.email;
-
-  const cursoSnap = await getDoc(doc(db, "cursos", cursoId));
-
-  if (cursoSnap.exists()) {
-    const cursoData = cursoSnap.data();
-    document.getElementById("tituloCurso").innerText =
-      cursoData.nome || "Curso";
+  if (!user && !carregou) {
+    setTimeout(() => {
+      if (!auth.currentUser) {
+        window.location.href = "index.html";
+      }
+    }, 1000);
   }
 
-  carregarAulas(user);
-
-});
-
-async function carregarAulas(user) {
-
-  const lista = document.getElementById("listaAulas");
-  lista.innerHTML = "";
-
-  const progressoSnap = await getDoc(doc(db, "progresso", user.uid));
-  let progresso = progressoSnap.exists() ? progressoSnap.data() : {};
-
-  const snapshot = await getDocs(
-    query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem"))
-  );
-
-  let primeira = true;
-
-  snapshot.forEach((docSnap) => {
-
-    const aula = docSnap.data();
-    const aulaId = docSnap.id;
-    const videoId = aula.videoId || aula.videoID;
-
-    const div = document.createElement("div");
-    div.className = "aula";
-
-    const titulo = document.createElement("div");
-    titulo.className = "aula-titulo";
-    titulo.innerText = aula.titulo;
-
-    const linha = document.createElement("div");
-    linha.className = "aula-linha";
-
-    const btn = document.createElement("button");
-    btn.innerText = "Assistir";
-
-    btn.addEventListener("click", () => {
-      trocarVideo(videoId, aulaId);
-    });
-
-    const check = document.createElement("span");
-    check.className = "check";
-    check.innerText = progresso[cursoId + "_" + aulaId] ? "✅" : "";
-
-    linha.appendChild(btn);
-    linha.appendChild(check);
-
-    div.appendChild(titulo);
-    div.appendChild(linha);
-
-    lista.appendChild(div);
-
-    if (primeira && videoId) {
-      document.getElementById("player").src =
-        "https://www.youtube.com/embed/" + videoId + "?rel=0&modestbranding=1";
-      primeira = false;
-    }
-
-  });
-
-}
-
-async function trocarVideo(videoId, aulaId) {
-
-  document.getElementById("player").src =
-    "https://www.youtube.com/embed/" + videoId + "?rel=0&modestbranding=1";
-
-  const user = auth.currentUser;
-  if (!user) return;
-
-  await setDoc(doc(db, "progresso", user.uid), {
-    [cursoId + "_" + aulaId]: true
-  }, { merge: true });
-
-}
-
-// 🔙 VOLTAR
-document.getElementById("btnVoltar").addEventListener("click", () => {
-  window.location.href = "cursos.html";
 });
 
 </script>

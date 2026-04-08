@@ -28,7 +28,6 @@
 
     input {
       padding: 10px;
-      font-size: 14px;
     }
 
     button {
@@ -37,12 +36,6 @@
       color: white;
       border: none;
       cursor: pointer;
-      border-radius: 5px;
-    }
-
-    #erro {
-      color: red;
-      font-size: 13px;
     }
   </style>
 </head>
@@ -51,41 +44,21 @@
 
 <div class="box">
   <h2>Login</h2>
-
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="senha" placeholder="Senha">
-
   <button id="loginBtn">Entrar</button>
-
-  <div id="erro"></div>
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { auth } from "./firebase.js";
 
 import {
-  getAuth,
   signInWithEmailAndPassword,
-  setPersistence,
-  browserLocalPersistence,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBDvVYNJS81RkxruoNNX3-ERSOv3MSaEKw",
-  authDomain: "anama-5ba78.firebaseapp.com",
-  projectId: "anama-5ba78",
-  storageBucket: "anama-5ba78.firebasestorage.app",
-  messagingSenderId: "641533046699",
-  appId: "1:641533046699:web:ac5bbec658bc08395eacee"
-};
-
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// 🔥 se já estiver logado, pula direto
+// já logado → pula direto
 onAuthStateChanged(auth, (user) => {
   if (user) {
     window.location.href = "cursos.html";
@@ -96,22 +69,12 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
 
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
-  const erroDiv = document.getElementById("erro");
-
-  erroDiv.innerText = "";
 
   try {
-
-    // 🔥 ESSENCIAL
-    await setPersistence(auth, browserLocalPersistence);
-
     await signInWithEmailAndPassword(auth, email, senha);
-
     window.location.href = "cursos.html";
-
   } catch (erro) {
-    erroDiv.innerText = erro.message;
-    console.error(erro);
+    alert(erro.message);
   }
 
 });
