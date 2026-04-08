@@ -89,7 +89,10 @@ const db = getFirestore(app);
 
 onAuthStateChanged(auth, async (user) => {
 
+  console.log("USER:", user);
+
   if (!user) {
+    console.log("REDIRECIONANDO...");
     window.location.href = "index.html";
     return;
   }
