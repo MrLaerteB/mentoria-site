@@ -2,12 +2,14 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Curso</title>
 </head>
 
 <body>
 
 <div id="loading">Carregando...</div>
+
 <div id="conteudo" style="display:none;">
   <h1>Curso 1</h1>
   <p id="user"></p>
@@ -18,26 +20,34 @@
 import { auth, onAuthStateChanged } from "./firebase.js";
 
 let carregou = false;
+let timeoutRedirect;
 
 onAuthStateChanged(auth, (user) => {
 
   console.log("USER CURSO:", user);
 
   if (user && !carregou) {
+
     carregou = true;
+    clearTimeout(timeoutRedirect);
 
     document.getElementById("loading").style.display = "none";
     document.getElementById("conteudo").style.display = "block";
 
     document.getElementById("user").innerText = user.email;
+
   }
 
   if (!user && !carregou) {
-    setTimeout(() => {
+
+    timeoutRedirect = setTimeout(() => {
+
       if (!auth.currentUser) {
         window.location.href = "index.html";
       }
-    }, 1000);
+
+    }, 3000); // tempo maior para mobile
+
   }
 
 });
