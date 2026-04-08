@@ -3,54 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Curso</title>
+  <title>Curso 1</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 15px;
+    }
+
+    .aula {
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .aula:hover {
+      background: #eee;
+    }
+
+    iframe {
+      width: 100%;
+      height: 220px;
+      border: none;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 
 <body>
 
 <div id="loading">Carregando...</div>
 
-<div id="conteudo" style="display:none;">
+<div id="conteudo" style="display:none;" class="container">
   <h1>Curso 1</h1>
   <p id="user"></p>
+
+  <iframe id="player" allowfullscreen></iframe>
+
+  <div id="listaAulas"></div>
 </div>
 
 <script type="module">
 
-import { auth, onAuthStateChanged } from "./firebase.js";
+import { auth, db, onAuthStateChanged } from "./firebase.js";
 
-let carregou = false;
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
 let timeoutRedirect;
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
-  console.log("USER CURSO:", user);
+  if (user) {
 
-  if (user && !carregou) {
-
-    carregou = true;
     clearTimeout(timeoutRedirect);
+
+    document.getElementById("user").innerText = user.email;
+
+    await carregarAulas();
 
     document.getElementById("loading").style.display = "none";
     document.getElementById("conteudo").style.display = "block";
 
-    document.getElementById("user").innerText = user.email;
-
-  }
-
-  if (!user && !carregou) {
+  } else {
 
     timeoutRedirect = setTimeout(() => {
-
       if (!auth.currentUser) {
         window.location.href = "index.html";
       }
-
-    }, 3000); // tempo maior para mobile
+    }, 3000);
 
   }
 
 });
+
+async function carregarAulas() {
+
+  const lista = document.getElementById("listaAulas");
+  lista.innerHTML = "";
+
+  const snapshot = await getDocs(
+    query(collection(db, "cursos", "curso1", "aulas"), orderBy("ordem"))
+  );
+
+  snapshot.forEach(doc => {
+
+    const aula = doc.data();
+
+    const div = document.createElement("div");
+    div.className = "aula";
+
+    div.innerText = aula.titulo || "Sem título";
+
+    div.addEventListener("click", () => {
+      carregarVideo(aula.videoId);
+    });
+
+    lista.appendChild(div);
+
+  });
+
+}
+
+function carregarVideo(videoId) {
+
+  const iframe = document.getElementById("player");
+
+  iframe.src = `https://www.youtube.com/embed/${videoId}`;
+
+}
 
 </script>
 

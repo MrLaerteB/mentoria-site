@@ -8,15 +8,41 @@
   <style>
     body {
       font-family: Arial;
-      padding: 20px;
+      padding: 15px;
       background: #f5f5f5;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
     }
 
     .curso {
       background: white;
       padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 8px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
+
+    .titulo {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .descricao {
+      color: #555;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
     }
   </style>
 </head>
@@ -24,7 +50,8 @@
 <body>
 
 <div id="loading">Carregando...</div>
-<div id="conteudo" style="display:none;">
+
+<div id="conteudo" style="display:none;" class="container">
   <h1>Cursos</h1>
   <p id="user"></p>
   <div id="lista"></div>
@@ -68,10 +95,24 @@ onAuthStateChanged(auth, async (user) => {
     const div = document.createElement("div");
     div.className = "curso";
 
-    div.innerHTML = `
-      <h3>${data.nome}</h3>
-      <button onclick="window.location.href='${id}.html'">Entrar</button>
-    `;
+    const titulo = document.createElement("div");
+    titulo.className = "titulo";
+    titulo.innerText = data.nome || "Sem nome";
+
+    const descricao = document.createElement("div");
+    descricao.className = "descricao";
+    descricao.innerText = data.descricao || "";
+
+    const btn = document.createElement("button");
+    btn.innerText = "Entrar";
+
+    btn.addEventListener("click", () => {
+      window.location.href = `${id}.html`;
+    });
+
+    div.appendChild(titulo);
+    div.appendChild(descricao);
+    div.appendChild(btn);
 
     document.getElementById("lista").appendChild(div);
 
