@@ -82,8 +82,7 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     clearTimeout(timeoutRedirect);
     document.getElementById("user").innerText = "Logado como: " + user.email;
-    await carregarNomeCurso();
-    await carregarAulas(user);
+    await carregarNomeCurso(user);
   } else {
     timeoutRedirect = setTimeout(() => {
       if (!auth.currentUser) {
@@ -93,19 +92,41 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-async function carregarNomeCurso() {
+// carrega dados do curso e decide template pelo campo 'classe'
+async function carregarNomeCurso(user) {
   const cursoRef = doc(db, "cursos", cursoId);
   const cursoSnap = await getDoc(cursoRef);
+
   if (cursoSnap.exists()) {
-    const nomeCurso = cursoSnap.data().nome || "Curso";
+    const dataCurso = cursoSnap.data();
+    const nomeCurso = dataCurso.nome || "Curso";
+    const classeCurso = dataCurso.classe || "padrao";
+
     document.title = nomeCurso;
     document.getElementById("tituloCurso").innerText = nomeCurso;
+
+    // renderiza conforme classe
+    if (classeCurso === "videos") {
+      await carregarAulas(user);
+    } else {
+      document.getElementById("listaAulas").innerHTML = 
+        "<p>Este curso ainda não possui template definido.</p>";
+      document.getElementById("player").style.display = "none";
+      document.getElementById("progressoTexto").style.display = "none";
+    }
+  } else {
+    document.getElementById("listaAulas").innerHTML = 
+      "<p>Curso não encontrado.</p>";
+    document.getElementById("player").style.display = "none";
+    document.getElementById("progressoTexto").style.display = "none";
   }
 }
 
+// carrega aulas do curso e progresso do usuário
 async function carregarAulas(user) {
   const lista = document.getElementById("listaAulas");
   lista.innerHTML = "";
+
   const snapshot = await getDocs(query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem")));
 
   let total = 0;
@@ -115,6 +136,7 @@ async function carregarAulas(user) {
   for (const docSnap of snapshot.docs) {
     const aula = docSnap.data();
     const aulaId = docSnap.id;
+
     if (!primeiraAula) primeiraAula = aula;
     total++;
 
