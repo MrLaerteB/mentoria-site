@@ -60,9 +60,9 @@
   }
 
   .tituloAula {
-    font-size: clamp(16px, 4vw, 20px);
+    font-size: clamp(18px, 4vw, 22px);
     font-weight: bold;
-    color: #06faa4;
+    color: white;
     margin-bottom: 5px;
   }
 
@@ -72,9 +72,10 @@
   }
 
   .aula button {
-    width: 100%;
-    padding: 8px;
-    font-size: 14px;
+    width: 25%; /* metade do tamanho anterior (25% do container) */
+    padding: 6px;
+    font-size: 14px; /* maior que antes */
+    font-weight: bold; /* negrito */
     background: #06faa4;
     color: #120532;
     border: none;
@@ -84,8 +85,9 @@
 
   @media (max-width: 480px) {
     body { padding: 5px; }
-    .tituloAula { font-size: 16px; }
+    .tituloAula { font-size: 18px; }
     #tituloCurso { font-size: 22px; }
+    .aula button { width: 100%; } /* botão 100% em telas pequenas */
   }
 </style>
 </head>
@@ -105,10 +107,8 @@
 import { auth, db, onAuthStateChanged } from "./firebase.js";
 import { doc, getDoc, collection, getDocs, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-// pega o ID do curso da URL
 const urlParams = new URLSearchParams(window.location.search);
 const cursoId = urlParams.get('id');
-
 let timeoutRedirect;
 
 onAuthStateChanged(auth, async (user) => {
