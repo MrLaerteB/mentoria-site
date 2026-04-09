@@ -32,6 +32,8 @@
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 10px;
+    display: flex;
+    flex-direction: column;
   }
 
   .titulo {
@@ -43,15 +45,31 @@
 
   .descricao {
     color: #ccc;
-    margin: 10px 0;
+    margin: 5px 0 10px 0;
+  }
+
+  .classe {
+    font-size: 12px;
+    color: #06faa4;
+    background: #2a0a6c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-style: italic;
+    margin-left: 10px;
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+
+  .btnWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   button.entrar {
     padding: 6px 12px;
     font-size: 14px;
     font-weight: bold;
-    width: 25%;
-    min-width: 80px;
     background: #06faa4;
     color: #120532;
     border: none;
@@ -89,8 +107,10 @@
   }
 
   @media (max-width: 768px) {
+    .btnWrapper { flex-direction: column; align-items: flex-start; }
     button.entrar { width: 50%; font-size: 15px; }
     #logout { width: 50%; font-size: 15px; }
+    .classe { align-self: flex-start; margin-left: 0; margin-top: 5px; }
   }
 
   @media (max-width: 480px) {
@@ -147,6 +167,9 @@ onAuthStateChanged(auth, async (user) => {
     descricao.className = "descricao";
     descricao.innerText = data.descricao || "";
 
+    const btnWrapper = document.createElement("div");
+    btnWrapper.className = "btnWrapper";
+
     const btn = document.createElement("button");
     btn.className = "entrar";
     btn.innerText = "Entrar";
@@ -155,9 +178,16 @@ onAuthStateChanged(auth, async (user) => {
       window.location.href = `curso1.html?id=${id}`;
     });
 
+    const classeTag = document.createElement("div");
+    classeTag.className = "classe";
+    classeTag.innerText = data.classe || "";
+
+    btnWrapper.appendChild(btn);
+    btnWrapper.appendChild(classeTag);
+
     div.appendChild(titulo);
     div.appendChild(descricao);
-    div.appendChild(btn);
+    div.appendChild(btnWrapper);
 
     document.getElementById("lista").appendChild(div);
   });
