@@ -1,64 +1,99 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #120532; /* fundo do logo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: white;
+  }
 
-    .box {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 300px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+  .box {
+    background: #1b074d; /* container escuro */
+    padding: 30px;
+    border-radius: 10px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    text-align: center;
+  }
 
-    input {
-      padding: 10px;
-    }
+  .box img {
+    width: 120px;
+    margin-bottom: 20px;
+  }
 
-    button {
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-  </style>
+  input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    margin-bottom: 10px;
+  }
+
+  button {
+    width: 100%;
+    padding: 10px;
+    background: #06faa4;
+    color: #120532;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button:hover {
+    background: #05e295;
+    transform: translateY(-2px);
+  }
+
+  a#esqueci {
+    color: #06faa4;
+    font-size: 14px;
+    text-decoration: none;
+    margin-top: 5px;
+  }
+
+  a#esqueci:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 480px) {
+    .box { width: 90%; padding: 20px; }
+    .box img { width: 100px; }
+    input, button { font-size: 16px; }
+  }
+</style>
 </head>
 
 <body>
 
 <div class="box">
+  <img src="logo.jpg" alt="Logo">
   <h2>Login</h2>
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="senha" placeholder="Senha">
   <button id="loginBtn">Entrar</button>
+  <a href="#" id="esqueci">Esqueci a senha</a>
 </div>
 
 <script type="module">
-
 import { auth } from "./firebase.js";
-import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-// já logado → redireciona para anama.html
+// já logado → pula direto
 onAuthStateChanged(auth, (user) => {
   if (user) {
     window.location.href = "anama.html";
@@ -66,19 +101,32 @@ onAuthStateChanged(auth, (user) => {
 });
 
 document.getElementById("loginBtn").addEventListener("click", async () => {
-
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
 
   try {
     await signInWithEmailAndPassword(auth, email, senha);
-    window.location.href = "anama.html"; // redireciona para o menu
+    window.location.href = "anama.html";
   } catch (erro) {
     alert(erro.message);
   }
-
 });
 
+// recuperação de senha
+document.getElementById("esqueci").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  if (!email) {
+    alert("Digite seu email para receber o link de redefinição.");
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert("Um link de redefinição de senha foi enviado para " + email);
+  } catch (erro) {
+    alert(erro.message);
+  }
+});
 </script>
 
 </body>

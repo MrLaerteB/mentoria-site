@@ -24,12 +24,19 @@
   button.voltar {
     padding: 8px 12px;
     font-size: 14px;
+    font-weight: bold;
     background: #06faa4;
     color: #120532;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     margin-bottom: 10px;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button.voltar:hover {
+    background: #05e295;
+    transform: translateY(-2px);
   }
 
   #tituloCurso {
@@ -53,7 +60,7 @@
   }
 
   .aula {
-    background: #1b074d; /* container mais claro que o fundo */
+    background: #1b074d;
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 10px;
@@ -72,22 +79,42 @@
   }
 
   .aula button {
-    width: 25%; /* metade do tamanho anterior (25% do container) */
+    width: 25%;
+    min-width: 80px;
     padding: 6px;
-    font-size: 14px; /* maior que antes */
-    font-weight: bold; /* negrito */
+    font-size: 14px;
+    font-weight: bold;
     background: #06faa4;
     color: #120532;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  .aula button:hover {
+    background: #05e295;
+    transform: translateY(-2px);
+  }
+
+  /* =====================
+     Melhorias Mobile
+     ===================== */
+  @media (max-width: 768px) {
+    body { padding: 8px; }
+    .tituloAula { font-size: 20px; }
+    #tituloCurso { font-size: 24px; }
+    .aula button { width: 50%; font-size: 15px; }
   }
 
   @media (max-width: 480px) {
     body { padding: 5px; }
-    .tituloAula { font-size: 18px; }
     #tituloCurso { font-size: 22px; }
-    .aula button { width: 100%; } /* botão 100% em telas pequenas */
+    .tituloAula { font-size: 18px; }
+    .aula button { width: 100%; font-size: 16px; }
+    #player { aspect-ratio: 16/9; }
+    #progressoTexto { font-size: 16px; }
+    button.voltar { width: 100%; font-size: 16px; padding: 10px; }
   }
 </style>
 </head>
