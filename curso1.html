@@ -4,23 +4,83 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Curso 1</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 15px;
+      background: #f5f5f5;
+      margin: 0;
+      text-align: left; /* alinhamento geral */
+    }
+
+    .container {
+      max-width: 900px;
+      /* margin: auto;  <- removido para evitar centralização */
+      text-align: left;
+    }
+
+    h1, p, h3, #listaAulas {
+      text-align: left;
+    }
+
+    #player {
+      width: 100%;
+      max-width: 600px;
+      height: 350px;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .aula {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      text-align: left;
+    }
+
+    .tituloAula {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .statusAula {
+      color: #555;
+      margin: 8px 0;
+    }
+
+    .aula button {
+      padding: 6px 10px;
+      font-size: 14px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+  </style>
 </head>
 
 <body>
 
-<h1 id="tituloCurso">Curso 1</h1>
-<p id="user"></p>
+<div class="container">
 
-<iframe id="player" width="600" height="350" allowfullscreen></iframe>
+  <h1 id="tituloCurso">Curso 1</h1>
+  <p id="user"></p>
 
-<h3 id="progressoTexto"></h3>
+  <iframe id="player" allowfullscreen></iframe>
 
-<div id="listaAulas"></div>
+  <h3 id="progressoTexto"></h3>
+
+  <div id="listaAulas"></div>
+
+</div>
 
 <script type="module">
 
 import { auth, db, onAuthStateChanged } from "./firebase.js";
-
 import {
   doc,
   getDoc,
@@ -32,123 +92,80 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const cursoId = "curso1";
-
 let timeoutRedirect;
 
 onAuthStateChanged(auth, async (user) => {
-
   if (user) {
-
     clearTimeout(timeoutRedirect);
-
-    document.getElementById("user").innerText =
-      "Logado como: " + user.email;
-
+    document.getElementById("user").innerText = "Logado como: " + user.email;
     await carregarNomeCurso();
     await carregarAulas(user);
-
   } else {
-
     timeoutRedirect = setTimeout(() => {
       if (!auth.currentUser) {
         window.location.href = "index.html";
       }
     }, 3000);
-
   }
-
 });
 
 async function carregarNomeCurso() {
   const cursoRef = doc(db, "cursos", cursoId);
   const cursoSnap = await getDoc(cursoRef);
-
   if (cursoSnap.exists()) {
     const nomeCurso = cursoSnap.data().nome || "Curso";
-
     document.title = nomeCurso;
     document.getElementById("tituloCurso").innerText = nomeCurso;
   }
 }
 
 async function carregarAulas(user) {
-
   const lista = document.getElementById("listaAulas");
   lista.innerHTML = "";
-
   const snapshot = await getDocs(
     query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem"))
   );
 
   let total = 0;
   let assistidas = 0;
-
-  // 🔥 NOVO: controlar primeira aula
   let primeiraAula = null;
 
   for (const docSnap of snapshot.docs) {
-
     const aula = docSnap.data();
     const aulaId = docSnap.id;
-
-    // 🔥 captura primeira aula
-    if (!primeiraAula) {
-      primeiraAula = aula;
-    }
-
+    if (!primeiraAula) primeiraAula = aula;
     total++;
 
     const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aulaId);
     const progressoSnap = await getDoc(progressoRef);
-
     const assistido = progressoSnap.exists();
-
     if (assistido) assistidas++;
 
     const div = document.createElement("div");
+    div.className = "aula";
 
     const statusTexto = assistido ? "✔ Assistido" : "❌ Não assistido";
 
     div.innerHTML = `
-      ${aula.titulo}
-      <br>
-      ${statusTexto}
-      <br>
+      <div class="tituloAula">${aula.titulo}</div>
+      <div class="statusAula">${statusTexto}</div>
       <button>Assistir</button>
-      <br><br>
     `;
 
     const btn = div.querySelector("button");
-
     btn.addEventListener("click", async () => {
-
       document.getElementById("player").src =
         `https://www.youtube.com/embed/${aula.videoId}`;
-
-      await setDoc(progressoRef, {
-        assistido: true
-      });
-
-      div.innerHTML = `
-        ${aula.titulo}
-        <br>
-        ✔ Assistido
-        <br>
-        <button>Assistir</button>
-        <br><br>
-      `;
-
+      await setDoc(progressoRef, { assistido: true });
+      div.querySelector(".statusAula").innerText = "✔ Assistido";
       assistidas++;
       document.getElementById("progressoTexto").innerText =
         `Progresso: ${assistidas} / ${total}`;
-
     });
 
     lista.appendChild(div);
-
   }
 
-  // 🔥 NOVO: carrega primeira aula automaticamente
   if (primeiraAula) {
     document.getElementById("player").src =
       `https://www.youtube.com/embed/${primeiraAula.videoId}`;
@@ -156,7 +173,6 @@ async function carregarAulas(user) {
 
   document.getElementById("progressoTexto").innerText =
     `Progresso: ${assistidas} / ${total}`;
-
 }
 
 </script>

@@ -11,11 +11,13 @@
       padding: 15px;
       background: #f5f5f5;
       margin: 0;
+      text-align: left; /* alinhamento geral à esquerda */
     }
 
     .container {
       max-width: 900px;
-      margin: auto;
+      /* margin: auto;  <- removido para evitar centralização */
+      text-align: left;
     }
 
     .curso {
@@ -23,6 +25,7 @@
       padding: 15px;
       margin-bottom: 15px;
       border-radius: 10px;
+      text-align: left; /* garante que conteúdo interno fique à esquerda */
     }
 
     .titulo {
@@ -36,14 +39,20 @@
     }
 
     button {
-      padding: 12px;
-      width: 100%;
-      font-size: 16px;
+      padding: 6px 10px; /* botões menores */
+      font-size: 14px;
       background: #007bff;
       color: white;
       border: none;
       border-radius: 6px;
+      cursor: pointer;
     }
+
+    button#logout {
+      width: auto;
+      margin-top: 10px;
+    }
+
   </style>
 </head>
 
@@ -78,7 +87,7 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-        document.getElementById("user").innerText =
+  document.getElementById("user").innerText =
       "Logado como: " + user.email;
 
   const snapshot = await getDocs(
