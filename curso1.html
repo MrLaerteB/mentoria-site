@@ -44,6 +44,7 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("user").innerText =
       "Logado como: " + user.email;
 
+    await carregarNomeCurso();
     await carregarAulas(user);
 
   } else {
@@ -58,6 +59,18 @@ onAuthStateChanged(auth, async (user) => {
 
 });
 
+async function carregarNomeCurso() {
+  const cursoRef = doc(db, "cursos", cursoId);
+  const cursoSnap = await getDoc(cursoRef);
+
+  if (cursoSnap.exists()) {
+    const nomeCurso = cursoSnap.data().nome || "Curso";
+
+    document.title = nomeCurso;
+    document.getElementById("tituloCurso").innerText = nomeCurso;
+  }
+}
+
 async function carregarAulas(user) {
 
   const lista = document.getElementById("listaAulas");
@@ -70,10 +83,18 @@ async function carregarAulas(user) {
   let total = 0;
   let assistidas = 0;
 
+  // 🔥 NOVO: controlar primeira aula
+  let primeiraAula = null;
+
   for (const docSnap of snapshot.docs) {
 
     const aula = docSnap.data();
     const aulaId = docSnap.id;
+
+    // 🔥 captura primeira aula
+    if (!primeiraAula) {
+      primeiraAula = aula;
+    }
 
     total++;
 
@@ -101,16 +122,13 @@ async function carregarAulas(user) {
 
     btn.addEventListener("click", async () => {
 
-      // 🔥 carrega vídeo
       document.getElementById("player").src =
         `https://www.youtube.com/embed/${aula.videoId}`;
 
-      // 🔥 salva progresso
       await setDoc(progressoRef, {
         assistido: true
       });
 
-      // 🔥 atualiza status visual
       div.innerHTML = `
         ${aula.titulo}
         <br>
@@ -120,7 +138,6 @@ async function carregarAulas(user) {
         <br><br>
       `;
 
-      // 🔥 atualiza contador
       assistidas++;
       document.getElementById("progressoTexto").innerText =
         `Progresso: ${assistidas} / ${total}`;
@@ -129,6 +146,12 @@ async function carregarAulas(user) {
 
     lista.appendChild(div);
 
+  }
+
+  // 🔥 NOVO: carrega primeira aula automaticamente
+  if (primeiraAula) {
+    document.getElementById("player").src =
+      `https://www.youtube.com/embed/${primeiraAula.videoId}`;
   }
 
   document.getElementById("progressoTexto").innerText =
