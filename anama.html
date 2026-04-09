@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANAMÁ TRADING</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 15px;
+      background: #f5f5f5;
+      margin: 0;
+      text-align: left;
+    }
+
+    .container {
+      max-width: 900px;
+      text-align: left;
+    }
+
+    .curso {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      text-align: left;
+    }
+
+    .titulo {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .descricao {
+      color: #555;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 6px 10px;
+      font-size: 14px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button#logout {
+      width: auto;
+      margin-top: 10px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div id="loading">Carregando...</div>
+
+<div id="conteudo" style="display:none;" class="container">
+  <h1>Nossos cursos</h1>
+  <p id="user"></p>
+  <div id="lista"></div>
+  <button id="logout">Sair</button>
+</div>
+
+<script type="module">
+
+import { auth, db, onAuthStateChanged } from "./firebase.js";
+import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("user").innerText = "Logado como: " + user.email;
+
+  const snapshot = await getDocs(query(collection(db, "cursos"), orderBy("ordem")));
+
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("conteudo").style.display = "block";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const id = doc.id;
+
+    const div = document.createElement("div");
+    div.className = "curso";
+
+    const titulo = document.createElement("div");
+    titulo.className = "titulo";
+    titulo.innerText = data.nome || "Sem nome";
+
+    const descricao = document.createElement("div");
+    descricao.className = "descricao";
+    descricao.innerText = data.descricao || "";
+
+    const btn = document.createElement("button");
+    btn.innerText = "Entrar";
+
+    // redireciona para curso1.html passando o ID do curso
+    btn.addEventListener("click", () => {
+      window.location.href = `curso1.html?id=${id}`;
+    });
+
+    div.appendChild(titulo);
+    div.appendChild(descricao);
+    div.appendChild(btn);
+
+    document.getElementById("lista").appendChild(div);
+  });
+});
+
+document.getElementById("logout").addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "index.html";
+});
+
+</script>
+
+</body>
+</html>
