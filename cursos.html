@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cursos</title>
+  <title>ANAMÁ TRADING</title>
 
   <style>
     body {
@@ -52,7 +52,7 @@
 <div id="loading">Carregando...</div>
 
 <div id="conteudo" style="display:none;" class="container">
-  <h1>Cursos</h1>
+  <h1>Nossos cursos</h1>
   <p id="user"></p>
   <div id="lista"></div>
   <button id="logout">Sair</button>
@@ -78,7 +78,8 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  document.getElementById("user").innerText = user.email;
+        document.getElementById("user").innerText =
+      "Logado como: " + user.email;
 
   const snapshot = await getDocs(
     query(collection(db, "cursos"), orderBy("ordem"))
