@@ -37,6 +37,12 @@
       margin: 10px 0;
     }
 
+    .classeCurso {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+
     button {
       padding: 6px 10px;
       font-size: 14px;
@@ -100,16 +106,20 @@ onAuthStateChanged(auth, async (user) => {
     descricao.className = "descricao";
     descricao.innerText = data.descricao || "";
 
+    const classeDiv = document.createElement("div");
+    classeDiv.className = "classeCurso";
+    classeDiv.innerText = data.classe || "";
+
     const btn = document.createElement("button");
     btn.innerText = "Entrar";
 
-    // redireciona para curso1.html passando o ID do curso
     btn.addEventListener("click", () => {
       window.location.href = `curso1.html?id=${id}`;
     });
 
     div.appendChild(titulo);
     div.appendChild(descricao);
+    div.appendChild(classeDiv); // classe discreta
     div.appendChild(btn);
 
     document.getElementById("lista").appendChild(div);
