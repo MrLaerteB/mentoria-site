@@ -8,7 +8,7 @@
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #120532; /* fundo do logo */
+    background: #120532;
     color: white;
     margin: 0;
     padding: 10px;
@@ -16,10 +16,10 @@
   }
 
   .container {
-    max-width: 900px;     
-    margin: auto;         
-    padding: 10px 15px;   
-    text-align: left;     
+    max-width: 900px;
+    margin: auto;
+    padding: 10px 15px;
+    text-align: left;
   }
 
   h1 {
@@ -48,6 +48,12 @@
     margin: 5px 0 10px 0;
   }
 
+  .btnWrapper {
+    display: flex;
+    align-items: center; /* 🔥 alinhamento vertical corrigido */
+    gap: 10px;
+  }
+
   .classe {
     font-size: 12px;
     color: #06faa4;
@@ -55,15 +61,7 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-style: italic;
-    margin-left: 10px;
-    align-self: flex-end;
     white-space: nowrap;
-  }
-
-  .btnWrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
   }
 
   button.entrar {
@@ -107,10 +105,12 @@
   }
 
   @media (max-width: 768px) {
-    .btnWrapper { flex-direction: column; align-items: flex-start; }
+    .btnWrapper {
+      flex-direction: column;
+      align-items: flex-start;
+    }
     button.entrar { width: 50%; font-size: 15px; }
     #logout { width: 50%; font-size: 15px; }
-    .classe { align-self: flex-start; margin-left: 0; margin-top: 5px; }
   }
 
   @media (max-width: 480px) {
@@ -147,12 +147,15 @@ onAuthStateChanged(auth, async (user) => {
 
   document.getElementById("user").innerText = "Logado como: " + user.email;
 
-  const snapshot = await getDocs(query(collection(db, "cursos"), orderBy("ordem")));
+  const snapshot = await getDocs(
+    query(collection(db, "cursos"), orderBy("ordem"))
+  );
 
   document.getElementById("loading").style.display = "none";
   document.getElementById("conteudo").style.display = "block";
 
   snapshot.forEach(doc => {
+
     const data = doc.data();
     const id = doc.id;
 
@@ -190,7 +193,9 @@ onAuthStateChanged(auth, async (user) => {
     div.appendChild(btnWrapper);
 
     document.getElementById("lista").appendChild(div);
+
   });
+
 });
 
 document.getElementById("logout").addEventListener("click", async () => {
