@@ -8,7 +8,7 @@
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #120532; /* fundo do logo */
+    background: #120532;
     color: white;
     margin: 0;
     padding: 10px;
@@ -18,11 +18,12 @@
   .container {
     max-width: 900px;
     margin: auto;
+    padding: 10px 15px;
     text-align: left;
   }
 
-  button.voltar {
-    padding: 8px 12px;
+  #voltar {
+    padding: 6px 12px;
     font-size: 14px;
     font-weight: bold;
     background: #06faa4;
@@ -30,24 +31,59 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin-bottom: 10px;
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  button.voltar:hover {
-    background: #05e295;
-    transform: translateY(-2px);
-  }
-
-  #tituloCurso {
-    color: #06faa4;
-    font-size: clamp(20px, 5vw, 28px);
     margin-bottom: 15px;
   }
 
-  #player {
+  #voltar:hover {
+    background: #05e295;
+    transform: translateY(-1px);
+  }
+
+  h1#tituloCurso {
+    color: #06faa4;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .aula {
+    background: #1b074d;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+
+  .tituloAula {
+    font-size: clamp(18px, 4vw, 20px);
+    font-weight: bold;
+    color: white;
+    margin-bottom: 5px;
+  }
+
+  .status {
+    margin-bottom: 10px;
+    color: #ccc;
+  }
+
+  button.assistir {
+    padding: 4px 8px;
+    font-size: 14px;
+    font-weight: bold;
+    background: #06faa4;
+    color: #120532;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button.assistir:hover {
+    background: #05e295;
+    transform: translateY(-1px);
+  }
+
+  iframe#player {
     width: 100%;
-    aspect-ratio: 16/9;
+    height: 350px;
     margin-bottom: 15px;
     border: none;
     border-radius: 10px;
@@ -56,65 +92,12 @@
   #progressoTexto {
     color: #06faa4;
     margin-bottom: 15px;
-    font-size: clamp(14px, 4vw, 18px);
-  }
-
-  .aula {
-    background: #1b074d;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-  }
-
-  .tituloAula {
-    font-size: clamp(18px, 4vw, 22px);
-    font-weight: bold;
-    color: white;
-    margin-bottom: 5px;
-  }
-
-  .statusAula {
-    color: #ccc;
-    margin-bottom: 10px;
-  }
-
-  .aula button {
-    width: 25%;
-    min-width: 80px;
-    padding: 6px;
-    font-size: 14px;
-    font-weight: bold;
-    background: #06faa4;
-    color: #120532;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  .aula button:hover {
-    background: #05e295;
-    transform: translateY(-2px);
-  }
-
-  /* =====================
-     Melhorias Mobile
-     ===================== */
-  @media (max-width: 768px) {
-    body { padding: 8px; }
-    .tituloAula { font-size: 20px; }
-    #tituloCurso { font-size: 24px; }
-    .aula button { width: 50%; font-size: 15px; }
   }
 
   @media (max-width: 480px) {
-    body { padding: 5px; }
-    #tituloCurso { font-size: 22px; }
-    .tituloAula { font-size: 18px; }
-    .aula button { width: 100%; font-size: 16px; }
-    #player { aspect-ratio: 16/9; }
-    #progressoTexto { font-size: 16px; }
-    button.voltar { width: 100%; font-size: 16px; padding: 10px; }
+    iframe#player { height: 220px; }
+    button.assistir { width: 100%; font-size: 16px; }
+    #voltar { width: 100%; font-size: 16px; }
   }
 </style>
 </head>
@@ -122,7 +105,7 @@
 <body>
 
 <div class="container">
-  <button class="voltar" onclick="window.location.href='anama.html'">← Voltar</button>
+  <button id="voltar">Voltar</button>
   <h1 id="tituloCurso">Curso</h1>
   <p id="user"></p>
   <iframe id="player" allowfullscreen></iframe>
@@ -135,57 +118,41 @@ import { auth, db, onAuthStateChanged } from "./firebase.js";
 import { doc, getDoc, collection, getDocs, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const urlParams = new URLSearchParams(window.location.search);
-const cursoId = urlParams.get('id');
+const cursoId = urlParams.get("id") || "curso1";
+
 let timeoutRedirect;
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     clearTimeout(timeoutRedirect);
     document.getElementById("user").innerText = "Logado como: " + user.email;
-    await carregarNomeCurso(user);
+    await carregarNomeCurso();
+    await carregarAulas(user);
   } else {
     timeoutRedirect = setTimeout(() => {
-      if (!auth.currentUser) {
-        window.location.href = "index.html";
-      }
+      if (!auth.currentUser) window.location.href = "index.html";
     }, 3000);
   }
 });
 
-async function carregarNomeCurso(user) {
+document.getElementById("voltar").addEventListener("click", () => {
+  window.location.href = "anama.html";
+});
+
+async function carregarNomeCurso() {
   const cursoRef = doc(db, "cursos", cursoId);
   const cursoSnap = await getDoc(cursoRef);
-
   if (cursoSnap.exists()) {
-    const dataCurso = cursoSnap.data();
-    const nomeCurso = dataCurso.nome || "Curso";
-    const classeCurso = dataCurso.classe || "padrao";
-
+    const nomeCurso = cursoSnap.data().nome || "Curso";
     document.title = nomeCurso;
     document.getElementById("tituloCurso").innerText = nomeCurso;
-
-    if (classeCurso === "videos") {
-      await carregarAulas(user);
-    } else {
-      document.getElementById("listaAulas").innerHTML = 
-        "<p>Este curso ainda não possui template definido.</p>";
-      document.getElementById("player").style.display = "none";
-      document.getElementById("progressoTexto").style.display = "none";
-    }
-  } else {
-    document.getElementById("listaAulas").innerHTML = 
-      "<p>Curso não encontrado.</p>";
-    document.getElementById("player").style.display = "none";
-    document.getElementById("progressoTexto").style.display = "none";
   }
 }
 
 async function carregarAulas(user) {
   const lista = document.getElementById("listaAulas");
   lista.innerHTML = "";
-
   const snapshot = await getDocs(query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem")));
-
   let total = 0;
   let assistidas = 0;
   let primeiraAula = null;
@@ -205,19 +172,17 @@ async function carregarAulas(user) {
     const div = document.createElement("div");
     div.className = "aula";
 
-    const statusTexto = assistido ? "✔ Assistido" : "❌ Não assistido";
-
     div.innerHTML = `
       <div class="tituloAula">${aula.titulo}</div>
-      <div class="statusAula">${statusTexto}</div>
-      <button>Assistir</button>
+      <div class="status">${assistido ? "✔ Assistido" : "❌ Não assistido"}</div>
+      <button class="assistir">Assistir</button>
     `;
 
-    const btn = div.querySelector("button");
+    const btn = div.querySelector("button.assistir");
     btn.addEventListener("click", async () => {
       document.getElementById("player").src = `https://www.youtube.com/embed/${aula.videoId}`;
       await setDoc(progressoRef, { assistido: true });
-      div.querySelector(".statusAula").innerText = "✔ Assistido";
+      div.querySelector(".status").innerText = "✔ Assistido";
       assistidas++;
       document.getElementById("progressoTexto").innerText = `Progresso: ${assistidas} / ${total}`;
     });
@@ -228,7 +193,6 @@ async function carregarAulas(user) {
   if (primeiraAula) {
     document.getElementById("player").src = `https://www.youtube.com/embed/${primeiraAula.videoId}`;
   }
-
   document.getElementById("progressoTexto").innerText = `Progresso: ${assistidas} / ${total}`;
 }
 </script>
