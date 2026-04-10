@@ -27,6 +27,31 @@
     margin-bottom: 15px;
   }
 
+  .filtros {
+    margin-bottom: 15px;
+  }
+
+  .filtroLabel {
+    color: white;
+    font-style: italic;
+    margin-right: 8px;
+    font-size: 11px;
+  }
+
+  .tagFiltro {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 3px;
+    cursor: pointer;
+    font-style: italic;
+  }
+
+  .tagFiltro.ativa {
+    outline: 2px solid white;
+  }
+
   .curso {
     background: #1b074d;
     padding: 15px;
@@ -53,17 +78,30 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
   }
 
-  .classe {
-    font-size: 12px;
-    color: #06faa4;
-    background: #2a0a6c;
+  .tag {
+    display: inline-block;
     padding: 2px 6px;
     border-radius: 4px;
-    font-style: italic;
+    font-size: 12px;
     white-space: nowrap;
+    font-style: italic;
   }
+
+  /* cores */
+  .videos { background:#ccffe6; color:#006644; }
+  .dolar { background:#ffd6d6; color:#990000; }
+  .ouro { background:#fff5cc; color:#8b6508; }
+  .downloads { background:#e0e0e0; color:#000; }
+  .comunicacao { background:#d6eaff; color:#001f4d; }
+
+  /* novas tags (sem conflito) */
+  .cursos { background:#ffd6eb; color:#cc0066; }
+  .mentorias { background:#001f4d; color:#d3d3d3; }
+
+  .default { background:#2a0a6c; color:#06faa4; }
 
   button.entrar {
     padding: 6px 12px;
@@ -74,12 +112,6 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  button.entrar:hover {
-    background: #05e295;
-    transform: translateY(-2px);
   }
 
   #logout {
@@ -92,34 +124,11 @@
     border-radius: 6px;
     cursor: pointer;
     margin-top: 10px;
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  #logout:hover {
-    background: #05e295;
-    transform: translateY(-2px);
   }
 
   #user {
     margin-bottom: 15px;
     color: #06faa4;
-  }
-
-  @media (max-width: 768px) {
-    .btnWrapper {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    button.entrar { width: 50%; font-size: 15px; }
-    #logout { width: 50%; font-size: 15px; }
-  }
-
-  @media (max-width: 480px) {
-    body { padding: 5px; }
-    h1 { font-size: 22px; }
-    .titulo { font-size: 18px; }
-    button.entrar { width: 100%; font-size: 16px; }
-    #logout { width: 100%; font-size: 16px; }
   }
 </style>
 </head>
@@ -131,7 +140,10 @@
 <div id="conteudo" style="display:none;" class="container">
   <h1>Nossos cursos</h1>
   <p id="user"></p>
+
+  <div id="filtros" class="filtros"></div>
   <div id="lista"></div>
+
   <button id="logout">Sair</button>
 </div>
 
@@ -139,6 +151,18 @@
 import { auth, db, onAuthStateChanged } from "./firebase.js";
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+let cursos = [];
+let filtroAtivo = null;
+
+function normalizar(tag){
+  return tag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"");
+}
+
+function corClasse(tag){
+  const t = normalizar(tag);
+  return ["videos","dolar","ouro","downloads","comunicacao","cursos","mentorias"].includes(t) ? t : "default";
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -152,24 +176,68 @@ onAuthStateChanged(auth, async (user) => {
     query(collection(db, "cursos"), orderBy("ordem"))
   );
 
+  snapshot.forEach(doc => {
+    cursos.push({ id: doc.id, ...doc.data() });
+  });
+
   document.getElementById("loading").style.display = "none";
   document.getElementById("conteudo").style.display = "block";
 
-  snapshot.forEach(doc => {
+  renderFiltros();
+  renderCursos();
+});
 
-    const data = doc.data();
-    const id = doc.id;
+function renderFiltros(){
+  const set = new Set();
+  cursos.forEach(c => (c.tags||[]).forEach(t => set.add(t)));
+
+  const container = document.getElementById("filtros");
+  container.innerHTML = "";
+
+  const label = document.createElement("span");
+  label.className = "filtroLabel";
+  label.innerText = "Filtro:";
+  container.appendChild(label);
+
+  set.forEach(tag => {
+    const el = document.createElement("span");
+    el.className = "tagFiltro " + corClasse(tag);
+    el.innerText = tag;
+
+    el.onclick = () => {
+      filtroAtivo = (filtroAtivo === tag) ? null : tag;
+      atualizarFiltrosUI();
+      renderCursos();
+    };
+
+    container.appendChild(el);
+  });
+}
+
+function atualizarFiltrosUI(){
+  document.querySelectorAll(".tagFiltro").forEach(el=>{
+    el.classList.toggle("ativa", el.innerText === filtroAtivo);
+  });
+}
+
+function renderCursos(){
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  cursos
+  .filter(c => !filtroAtivo || (c.tags||[]).includes(filtroAtivo))
+  .forEach(curso => {
 
     const div = document.createElement("div");
     div.className = "curso";
 
     const titulo = document.createElement("div");
     titulo.className = "titulo";
-    titulo.innerText = data.nome || "Sem nome";
+    titulo.innerText = curso.nome || "Sem nome";
 
     const descricao = document.createElement("div");
     descricao.className = "descricao";
-    descricao.innerText = data.descricao || "";
+    descricao.innerText = curso.descricao || "";
 
     const btnWrapper = document.createElement("div");
     btnWrapper.className = "btnWrapper";
@@ -178,26 +246,26 @@ onAuthStateChanged(auth, async (user) => {
     btn.className = "entrar";
     btn.innerText = "Entrar";
 
-    btn.addEventListener("click", () => {
-      window.location.href = `curso1.html?id=${id}`;
-    });
-
-    const classeTag = document.createElement("div");
-    classeTag.className = "classe";
-    classeTag.innerText = data.classe || "";
+    btn.onclick = () => {
+      window.location.href = `curso1.html?id=${curso.id}`;
+    };
 
     btnWrapper.appendChild(btn);
-    btnWrapper.appendChild(classeTag);
+
+    (curso.tags || []).forEach(tag => {
+      const t = document.createElement("span");
+      t.className = "tag " + corClasse(tag);
+      t.innerText = tag;
+      btnWrapper.appendChild(t);
+    });
 
     div.appendChild(titulo);
     div.appendChild(descricao);
     div.appendChild(btnWrapper);
 
-    document.getElementById("lista").appendChild(div);
-
+    lista.appendChild(div);
   });
-
-});
+}
 
 document.getElementById("logout").addEventListener("click", async () => {
   await signOut(auth);
