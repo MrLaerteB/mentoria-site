@@ -96,11 +96,8 @@
   .ouro { background:#fff5cc; color:#8b6508; }
   .downloads { background:#e0e0e0; color:#000; }
   .comunicacao { background:#d6eaff; color:#001f4d; }
-
-  /* novas tags (sem conflito) */
   .cursos { background:#ffd6eb; color:#cc0066; }
   .mentorias { background:#001f4d; color:#d3d3d3; }
-
   .default { background:#2a0a6c; color:#06faa4; }
 
   button.entrar {
@@ -153,7 +150,7 @@ import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/fir
 import { signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 let cursos = [];
-let filtroAtivo = null;
+let filtrosAtivos = [];
 
 function normalizar(tag){
   return tag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"");
@@ -205,7 +202,12 @@ function renderFiltros(){
     el.innerText = tag;
 
     el.onclick = () => {
-      filtroAtivo = (filtroAtivo === tag) ? null : tag;
+      if (filtrosAtivos.includes(tag)) {
+        filtrosAtivos = filtrosAtivos.filter(t => t !== tag);
+      } else {
+        filtrosAtivos.push(tag);
+      }
+
       atualizarFiltrosUI();
       renderCursos();
     };
@@ -216,7 +218,7 @@ function renderFiltros(){
 
 function atualizarFiltrosUI(){
   document.querySelectorAll(".tagFiltro").forEach(el=>{
-    el.classList.toggle("ativa", el.innerText === filtroAtivo);
+    el.classList.toggle("ativa", filtrosAtivos.includes(el.innerText));
   });
 }
 
@@ -225,7 +227,10 @@ function renderCursos(){
   lista.innerHTML = "";
 
   cursos
-  .filter(c => !filtroAtivo || (c.tags||[]).includes(filtroAtivo))
+  .filter(c => 
+    filtrosAtivos.length === 0 || 
+    filtrosAtivos.every(f => (c.tags||[]).includes(f))
+  )
   .forEach(curso => {
 
     const div = document.createElement("div");
