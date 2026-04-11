@@ -77,7 +77,6 @@
     font-size: 16px;
   }
 
-  /* BOTÃO DROPDOWN */
   #btnModulo {
     padding: 6px 12px;
     font-size: 13px;
@@ -93,7 +92,6 @@
     background: #05e295;
   }
 
-  /* MENU */
   #menuModulo {
     display: none;
     position: absolute;
@@ -253,9 +251,19 @@ async function carregarAulas(user) {
 
   for (const aula of todasAulas) {
     if (aula.modulo !== undefined && aula.nomeModulo) {
+
+      // 🔥 ALTERAÇÃO AQUI
       if (!nomeModuloMap[aula.modulo]) {
         nomeModuloMap[aula.modulo] = aula.nomeModulo;
+      } else if (nomeModuloMap[aula.modulo] !== aula.nomeModulo) {
+        console.warn(
+          `Inconsistência no módulo ${aula.modulo}:`,
+          nomeModuloMap[aula.modulo],
+          "vs",
+          aula.nomeModulo
+        );
       }
+
     }
   }
 
