@@ -12,7 +12,6 @@
     color: white;
     margin: 0;
     padding: 10px;
-    text-align: left;
   }
 
   .container {
@@ -45,10 +44,16 @@
     margin: 3px;
     cursor: pointer;
     font-style: italic;
+    transition: all 0.2s;
   }
 
   .tagFiltro.ativa {
     outline: 2px solid white;
+  }
+
+  .tagFiltro:hover {
+    transform: translateY(-1px);
+    opacity: 0.85;
   }
 
   .curso {
@@ -58,8 +63,6 @@
     border-radius: 10px;
     display: flex;
     flex-direction: column;
-
-    /* 🔥 separação visual */
     border-top: 3px solid #06faa4;
   }
 
@@ -99,8 +102,8 @@
   .mentorias { background:#e0e0e0; color:#000; }
   .default { background:#2a0a6c; color:#06faa4; }
 
-  /* 🔥 botão novo */
-  .entrar {
+  /* BOTÕES */
+  .entrar, #logout {
     width: 100%;
     padding: 10px;
     font-size: 15px;
@@ -110,17 +113,16 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  /* hover padrão */
+  .entrar:hover, #logout:hover {
+    background: #05e295;
+    transform: translateY(-2px);
   }
 
   #logout {
-    padding: 8px 12px;
-    font-size: 14px;
-    font-weight: bold;
-    background: #06faa4;
-    color: #120532;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
     margin-top: 10px;
   }
 
@@ -257,7 +259,7 @@ function renderCursos(){
 
     const btn = document.createElement("button");
     btn.className = "entrar";
-    btn.innerText = "Entrar ▶️";
+    btn.innerText = "Entrar ▸";
 
     btn.onclick = () => {
       window.location.href = `curso1.html?id=${curso.id}`;
