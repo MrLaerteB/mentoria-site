@@ -244,11 +244,9 @@ async function carregarNomeCurso() {
 
 async function carregarAulas(user) {
   const snapshot = await getDocs(query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem")));
-
   todasAulas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
   nomeModuloMap = {};
-
   for (const aula of todasAulas) {
     if (aula.modulo !== undefined && aula.nomeModulo) {
       if (!nomeModuloMap[aula.modulo]) {
@@ -267,7 +265,6 @@ async function carregarAulas(user) {
   }
 
   moduloContainer.style.display = "flex";
-
   menuModulo.innerHTML = "";
 
   modulos.forEach(mod => {
@@ -310,16 +307,30 @@ async function renderAulas(user) {
   aulas.sort((a,b)=>a.ordem-b.ordem);
 
   for (const aula of aulas) {
-    if (!primeira) primeira = aula;
-    total++;
+    if (!primeira && aula.videoId) primeira = aula;
 
-    const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aula.id);
-    const snap = await getDoc(progressoRef);
-    const assistido = snap.exists();
-    if (assistido) assistidas++;
+    const temVideo = !!aula.videoId;
+
+    let assistido = false;
+
+    if (temVideo) {
+      total++;
+      const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aula.id);
+      const snap = await getDoc(progressoRef);
+      assistido = snap.exists();
+      if (assistido) assistidas++;
+    }
 
     const div = document.createElement("div");
     div.className = "aula";
+
+    let statusHtml = "";
+    let botaoAssistir = "";
+
+    if (temVideo) {
+      statusHtml = `<div class="status">${assistido ? "✔ Assistido" : "❌ Não assistido"}</div>`;
+      botaoAssistir = `<button class="assistir">Assistir</button>`;
+    }
 
     let botaoDownload = "";
     if (aula.materialUrl) {
@@ -332,16 +343,19 @@ async function renderAulas(user) {
 
     div.innerHTML = `
       <div class="tituloAula">${aula.titulo}</div>
-      <div class="status">${assistido ? "✔ Assistido" : "❌ Não assistido"}</div>
-      <button class="assistir">Assistir</button>
+      ${statusHtml}
+      ${botaoAssistir}
       ${botaoDownload}
     `;
 
-    div.querySelector("button").onclick = async () => {
-      document.getElementById("player").src = `https://www.youtube.com/embed/${aula.videoId}`;
-      await setDoc(progressoRef, { assistido: true });
-      div.querySelector(".status").innerText = "✔ Assistido";
-    };
+    if (temVideo) {
+      div.querySelector(".assistir").onclick = async () => {
+        document.getElementById("player").src = `https://www.youtube.com/embed/${aula.videoId}`;
+        const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aula.id);
+        await setDoc(progressoRef, { assistido: true });
+        div.querySelector(".status").innerText = "✔ Assistido";
+      };
+    }
 
     lista.appendChild(div);
   }
@@ -350,7 +364,9 @@ async function renderAulas(user) {
     document.getElementById("player").src = `https://www.youtube.com/embed/${primeira.videoId}`;
   }
 
-  document.getElementById("progressoTexto").innerText = `Progresso: ${assistidas} / ${total}`;
+  document.getElementById("progressoTexto").innerText = total > 0
+    ? `Progresso: ${assistidas} / ${total}`
+    : "";
 }
 </script>
 
