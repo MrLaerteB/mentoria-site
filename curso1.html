@@ -22,6 +22,13 @@
     text-align: left;
   }
 
+  .topo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
   #voltar {
     padding: 6px 12px;
     font-size: 14px;
@@ -31,10 +38,44 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin-bottom: 15px;
   }
 
   #voltar:hover {
+    background: #05e295;
+    transform: translateY(-1px);
+  }
+
+  #user {
+    font-size: 13px;
+    font-style: italic;
+    color: #ccc;
+  }
+
+  .modulo-container {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+  }
+
+  #tituloModulo {
+    color: #06faa4;
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  #selectModulo {
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    background: #06faa4;
+    color: #120532;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #selectModulo:hover {
     background: #05e295;
     transform: translateY(-1px);
   }
@@ -105,9 +146,19 @@
 <body>
 
 <div class="container">
-  <button id="voltar">Voltar</button>
+
+  <div class="topo">
+    <button id="voltar">Voltar</button>
+    <p id="user"></p>
+  </div>
+
   <h1 id="tituloCurso">Curso</h1>
-  <p id="user"></p>
+
+  <div class="modulo-container" id="moduloContainer">
+    <div id="tituloModulo"></div>
+    <select id="selectModulo"></select>
+  </div>
+
   <iframe id="player" allowfullscreen></iframe>
   <h3 id="progressoTexto"></h3>
   <div id="listaAulas"></div>
@@ -121,10 +172,18 @@ const urlParams = new URLSearchParams(window.location.search);
 const cursoId = urlParams.get("id") || "curso1";
 
 let timeoutRedirect;
+let todasAulas = [];
+let moduloAtual = null;
+let nomeModuloMap = {};
+let userGlobal = null;
+
+const selectModulo = document.getElementById("selectModulo");
+const moduloContainer = document.getElementById("moduloContainer");
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     clearTimeout(timeoutRedirect);
+    userGlobal = user;
     document.getElementById("user").innerText = "Logado como: " + user.email;
     await carregarNomeCurso();
     await carregarAulas(user);
@@ -139,6 +198,20 @@ document.getElementById("voltar").addEventListener("click", () => {
   window.location.href = "anama.html";
 });
 
+selectModulo.addEventListener("change", () => {
+  moduloAtual = selectModulo.value;
+  salvarModulo();
+  renderAulas(userGlobal);
+});
+
+function salvarModulo() {
+  localStorage.setItem("modulo_" + cursoId, moduloAtual);
+}
+
+function recuperarModulo() {
+  return localStorage.getItem("modulo_" + cursoId);
+}
+
 async function carregarNomeCurso() {
   const cursoRef = doc(db, "cursos", cursoId);
   const cursoSnap = await getDoc(cursoRef);
@@ -150,21 +223,74 @@ async function carregarNomeCurso() {
 }
 
 async function carregarAulas(user) {
+  const snapshot = await getDocs(query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem")));
+  
+  todasAulas = snapshot.docs.map(docSnap => ({
+    id: docSnap.id,
+    ...docSnap.data()
+  }));
+
+  nomeModuloMap = {};
+
+  for (const aula of todasAulas) {
+    if (aula.modulo !== undefined && aula.nomeModulo) {
+      const mod = aula.modulo;
+      if (!nomeModuloMap[mod]) {
+        nomeModuloMap[mod] = aula.nomeModulo;
+      }
+    }
+  }
+
+  const modulos = Object.keys(nomeModuloMap).sort((a, b) => a - b);
+
+  if (modulos.length <= 1) {
+    moduloContainer.style.display = "none";
+    moduloAtual = modulos[0] || null;
+    renderAulas(user);
+    return;
+  }
+
+  moduloContainer.style.display = "flex";
+
+  selectModulo.innerHTML = "";
+  modulos.forEach(mod => {
+    const option = document.createElement("option");
+    option.value = mod;
+    option.textContent = nomeModuloMap[mod];
+    selectModulo.appendChild(option);
+  });
+
+  const moduloSalvo = recuperarModulo();
+  moduloAtual = modulos.includes(moduloSalvo) ? moduloSalvo : modulos[0];
+
+  renderAulas(user);
+}
+
+async function renderAulas(user) {
   const lista = document.getElementById("listaAulas");
   lista.innerHTML = "";
-  const snapshot = await getDocs(query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem")));
+
+  if (moduloAtual !== null) {
+    document.getElementById("tituloModulo").innerText = nomeModuloMap[moduloAtual];
+    selectModulo.value = moduloAtual;
+  }
+
   let total = 0;
   let assistidas = 0;
   let primeiraAula = null;
 
-  for (const docSnap of snapshot.docs) {
-    const aula = docSnap.data();
-    const aulaId = docSnap.id;
+  const aulasFiltradas = moduloAtual === null
+    ? todasAulas
+    : todasAulas.filter(a => a.modulo == moduloAtual);
+
+  const aulasOrdenadas = aulasFiltradas.sort((a, b) => a.ordem - b.ordem);
+
+  for (const aula of aulasOrdenadas) {
 
     if (!primeiraAula) primeiraAula = aula;
     total++;
 
-    const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aulaId);
+    const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aula.id);
     const progressoSnap = await getDoc(progressoRef);
     const assistido = progressoSnap.exists();
     if (assistido) assistidas++;
@@ -193,6 +319,7 @@ async function carregarAulas(user) {
   if (primeiraAula) {
     document.getElementById("player").src = `https://www.youtube.com/embed/${primeiraAula.videoId}`;
   }
+
   document.getElementById("progressoTexto").innerText = `Progresso: ${assistidas} / ${total}`;
 }
 </script>
