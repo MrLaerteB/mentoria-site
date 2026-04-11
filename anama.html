@@ -74,7 +74,15 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+
+    /* 🔥 CORREÇÃO */
+    flex-wrap: nowrap;
+  }
+
+  .titulo span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .iconeCurso {
@@ -250,7 +258,6 @@ function renderCursos(){
     const titulo = document.createElement("div");
     titulo.className = "titulo";
 
-    // 🔥 NOVO (icone dinâmico)
     if (curso.icone) {
       const img = document.createElement("img");
       img.src = curso.icone;
