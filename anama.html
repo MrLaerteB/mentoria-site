@@ -70,6 +70,17 @@
     font-size: clamp(18px, 5vw, 22px);
     font-weight: bold;
     margin-bottom: 5px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .iconeCurso {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
   }
 
   .descricao {
@@ -92,7 +103,6 @@
     font-style: italic;
   }
 
-  /* cores */
   .videos { background:#ccffe6; color:#006644; }
   .dolar { background:#ffd6d6; color:#990000; }
   .ouro { background:#fff5cc; color:#8b6508; }
@@ -102,7 +112,6 @@
   .mentorias { background:#e0e0e0; color:#000; }
   .default { background:#2a0a6c; color:#06faa4; }
 
-  /* BOTÕES */
   .entrar, #logout {
     width: 100%;
     padding: 10px;
@@ -116,7 +125,6 @@
     transition: all 0.2s;
   }
 
-  /* hover padrão */
   .entrar:hover, #logout:hover {
     background: #05e295;
     transform: translateY(-2px);
@@ -241,7 +249,18 @@ function renderCursos(){
 
     const titulo = document.createElement("div");
     titulo.className = "titulo";
-    titulo.innerText = curso.nome || "Sem nome";
+
+    // 🔥 NOVO (icone dinâmico)
+    if (curso.icone) {
+      const img = document.createElement("img");
+      img.src = curso.icone;
+      img.className = "iconeCurso";
+      titulo.appendChild(img);
+    }
+
+    const texto = document.createElement("span");
+    texto.innerText = curso.nome || "Sem nome";
+    titulo.appendChild(texto);
 
     const descricao = document.createElement("div");
     descricao.className = "descricao";
