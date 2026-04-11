@@ -251,19 +251,9 @@ async function carregarAulas(user) {
 
   for (const aula of todasAulas) {
     if (aula.modulo !== undefined && aula.nomeModulo) {
-
-      // 🔥 ALTERAÇÃO AQUI
       if (!nomeModuloMap[aula.modulo]) {
         nomeModuloMap[aula.modulo] = aula.nomeModulo;
-      } else if (nomeModuloMap[aula.modulo] !== aula.nomeModulo) {
-        console.warn(
-          `Inconsistência no módulo ${aula.modulo}:`,
-          nomeModuloMap[aula.modulo],
-          "vs",
-          aula.nomeModulo
-        );
       }
-
     }
   }
 
@@ -331,10 +321,20 @@ async function renderAulas(user) {
     const div = document.createElement("div");
     div.className = "aula";
 
+    let botaoDownload = "";
+    if (aula.materialUrl) {
+      botaoDownload = `
+        <a href="${aula.materialUrl}" download>
+          <button class="assistir" style="margin-top:8px;">Baixar Material</button>
+        </a>
+      `;
+    }
+
     div.innerHTML = `
       <div class="tituloAula">${aula.titulo}</div>
       <div class="status">${assistido ? "✔ Assistido" : "❌ Não assistido"}</div>
       <button class="assistir">Assistir</button>
+      ${botaoDownload}
     `;
 
     div.querySelector("button").onclick = async () => {
