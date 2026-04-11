@@ -19,7 +19,6 @@
     max-width: 900px;
     margin: auto;
     padding: 10px 15px;
-    text-align: left;
   }
 
   h1 {
@@ -59,12 +58,14 @@
     border-radius: 10px;
     display: flex;
     flex-direction: column;
+
+    /* 🔥 separação visual */
+    border-top: 3px solid #06faa4;
   }
 
   .titulo {
     font-size: clamp(18px, 5vw, 22px);
     font-weight: bold;
-    color: white;
     margin-bottom: 5px;
   }
 
@@ -74,19 +75,17 @@
     font-size: 12px;
   }
 
-  .btnWrapper {
+  .tagsWrapper {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
+    margin-bottom: 10px;
   }
 
   .tag {
-    display: inline-block;
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 12px;
-    white-space: nowrap;
     font-style: italic;
   }
 
@@ -94,23 +93,22 @@
   .videos { background:#ccffe6; color:#006644; }
   .dolar { background:#ffd6d6; color:#990000; }
   .ouro { background:#fff5cc; color:#8b6508; }
-
-  /* ajuste solicitado */
   .downloads { background:#5a3e1b; color:#fff5cc; }
-
   .comunicacao { background:#d6eaff; color:#001f4d; }
   .cursos { background:#ffd6eb; color:#cc0066; }
-  .mentorias { background:#e0e0e0; color:#000000; }
+  .mentorias { background:#e0e0e0; color:#000; }
   .default { background:#2a0a6c; color:#06faa4; }
 
-  button.entrar {
-    padding: 6px 12px;
-    font-size: 14px;
+  /* 🔥 botão novo */
+  .entrar {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
     font-weight: bold;
     background: #06faa4;
     color: #120532;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
   }
 
@@ -247,29 +245,28 @@ function renderCursos(){
     descricao.className = "descricao";
     descricao.innerText = curso.descricao || "";
 
-    const btnWrapper = document.createElement("div");
-    btnWrapper.className = "btnWrapper";
-
-    const btn = document.createElement("button");
-    btn.className = "entrar";
-    btn.innerText = "Entrar";
-
-    btn.onclick = () => {
-      window.location.href = `curso1.html?id=${curso.id}`;
-    };
-
-    btnWrapper.appendChild(btn);
+    const tagsWrapper = document.createElement("div");
+    tagsWrapper.className = "tagsWrapper";
 
     (curso.tags || []).forEach(tag => {
       const t = document.createElement("span");
       t.className = "tag " + corClasse(tag);
       t.innerText = tag;
-      btnWrapper.appendChild(t);
+      tagsWrapper.appendChild(t);
     });
+
+    const btn = document.createElement("button");
+    btn.className = "entrar";
+    btn.innerText = "Entrar ▶️";
+
+    btn.onclick = () => {
+      window.location.href = `curso1.html?id=${curso.id}`;
+    };
 
     div.appendChild(titulo);
     div.appendChild(descricao);
-    div.appendChild(btnWrapper);
+    div.appendChild(tagsWrapper);
+    div.appendChild(btn);
 
     lista.appendChild(div);
   });
