@@ -12,32 +12,32 @@
     color: white;
     margin: 0;
     padding: 10px;
-    text-align: left;
   }
 
   .container {
     max-width: 900px;
     margin: auto;
     padding: 10px 15px;
-    text-align: left;
   }
 
   .topo {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
   }
 
   #voltar {
-    padding: 6px 12px;
-    font-size: 14px;
+    padding: 5px 10px;
+    font-size: 13px;
     font-weight: bold;
     background: #06faa4;
     color: #120532;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   #voltar:hover {
@@ -46,27 +46,41 @@
   }
 
   #user {
-    font-size: 13px;
+    font-size: 12px;
     font-style: italic;
     color: #ccc;
+    text-align: right;
+    word-break: break-word;
+    max-width: 60%;
+  }
+
+  h1#tituloCurso {
+    color: #06faa4;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: clamp(20px, 5vw, 28px);
+    line-height: 1.2;
+    word-break: break-word;
   }
 
   .modulo-container {
     display: none;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    position: relative;
   }
 
   #tituloModulo {
     color: #06faa4;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 16px;
   }
 
-  #selectModulo {
+  /* BOTÃO DROPDOWN */
+  #btnModulo {
     padding: 6px 12px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     background: #06faa4;
     color: #120532;
@@ -75,14 +89,43 @@
     cursor: pointer;
   }
 
-  #selectModulo:hover {
+  #btnModulo:hover {
     background: #05e295;
-    transform: translateY(-1px);
   }
 
-  h1#tituloCurso {
+  /* MENU */
+  #menuModulo {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 35px;
+    background: #1b074d;
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 10;
+    min-width: 180px;
+  }
+
+  .itemModulo {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #2a0d6b;
+  }
+
+  .itemModulo:hover {
+    background: #2a0d6b;
+  }
+
+  iframe#player {
+    width: 100%;
+    height: 220px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 10px;
+  }
+
+  #progressoTexto {
     color: #06faa4;
-    font-weight: bold;
     margin-bottom: 15px;
   }
 
@@ -94,9 +137,8 @@
   }
 
   .tituloAula {
-    font-size: clamp(18px, 4vw, 20px);
+    font-size: 16px;
     font-weight: bold;
-    color: white;
     margin-bottom: 5px;
   }
 
@@ -106,7 +148,7 @@
   }
 
   button.assistir {
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: 14px;
     font-weight: bold;
     background: #06faa4;
@@ -114,31 +156,17 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
+    width: 100%;
   }
 
   button.assistir:hover {
     background: #05e295;
-    transform: translateY(-1px);
   }
 
-  iframe#player {
-    width: 100%;
-    height: 350px;
-    margin-bottom: 15px;
-    border: none;
-    border-radius: 10px;
-  }
-
-  #progressoTexto {
-    color: #06faa4;
-    margin-bottom: 15px;
-  }
-
-  @media (max-width: 480px) {
-    iframe#player { height: 220px; }
-    button.assistir { width: 100%; font-size: 16px; }
-    #voltar { width: 100%; font-size: 16px; }
+  @media (min-width: 600px) {
+    iframe#player {
+      height: 350px;
+    }
   }
 </style>
 </head>
@@ -156,7 +184,8 @@
 
   <div class="modulo-container" id="moduloContainer">
     <div id="tituloModulo"></div>
-    <select id="selectModulo"></select>
+    <button id="btnModulo">Trocar módulo</button>
+    <div id="menuModulo"></div>
   </div>
 
   <iframe id="player" allowfullscreen></iframe>
@@ -168,80 +197,69 @@
 import { auth, db, onAuthStateChanged } from "./firebase.js";
 import { doc, getDoc, collection, getDocs, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const urlParams = new URLSearchParams(window.location.search);
-const cursoId = urlParams.get("id") || "curso1";
+const cursoId = new URLSearchParams(window.location.search).get("id") || "curso1";
 
-let timeoutRedirect;
 let todasAulas = [];
 let moduloAtual = null;
 let nomeModuloMap = {};
 let userGlobal = null;
 
-const selectModulo = document.getElementById("selectModulo");
 const moduloContainer = document.getElementById("moduloContainer");
+const menuModulo = document.getElementById("menuModulo");
+const btnModulo = document.getElementById("btnModulo");
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    clearTimeout(timeoutRedirect);
     userGlobal = user;
-    document.getElementById("user").innerText = "Logado como: " + user.email;
+    document.getElementById("user").innerText = "Logado como:\n" + user.email;
     await carregarNomeCurso();
     await carregarAulas(user);
   } else {
-    timeoutRedirect = setTimeout(() => {
+    setTimeout(() => {
       if (!auth.currentUser) window.location.href = "index.html";
     }, 3000);
   }
 });
 
-document.getElementById("voltar").addEventListener("click", () => {
+document.getElementById("voltar").onclick = () => {
   window.location.href = "anama.html";
+};
+
+btnModulo.onclick = () => {
+  menuModulo.style.display = menuModulo.style.display === "block" ? "none" : "block";
+};
+
+document.addEventListener("click", (e) => {
+  if (!btnModulo.contains(e.target) && !menuModulo.contains(e.target)) {
+    menuModulo.style.display = "none";
+  }
 });
-
-selectModulo.addEventListener("change", () => {
-  moduloAtual = selectModulo.value;
-  salvarModulo();
-  renderAulas(userGlobal);
-});
-
-function salvarModulo() {
-  localStorage.setItem("modulo_" + cursoId, moduloAtual);
-}
-
-function recuperarModulo() {
-  return localStorage.getItem("modulo_" + cursoId);
-}
 
 async function carregarNomeCurso() {
-  const cursoRef = doc(db, "cursos", cursoId);
-  const cursoSnap = await getDoc(cursoRef);
-  if (cursoSnap.exists()) {
-    const nomeCurso = cursoSnap.data().nome || "Curso";
-    document.title = nomeCurso;
-    document.getElementById("tituloCurso").innerText = nomeCurso;
+  const snap = await getDoc(doc(db, "cursos", cursoId));
+  if (snap.exists()) {
+    const nome = snap.data().nome || "Curso";
+    document.title = nome;
+    document.getElementById("tituloCurso").innerText = nome;
   }
 }
 
 async function carregarAulas(user) {
   const snapshot = await getDocs(query(collection(db, "cursos", cursoId, "aulas"), orderBy("ordem")));
-  
-  todasAulas = snapshot.docs.map(docSnap => ({
-    id: docSnap.id,
-    ...docSnap.data()
-  }));
+
+  todasAulas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
   nomeModuloMap = {};
 
   for (const aula of todasAulas) {
     if (aula.modulo !== undefined && aula.nomeModulo) {
-      const mod = aula.modulo;
-      if (!nomeModuloMap[mod]) {
-        nomeModuloMap[mod] = aula.nomeModulo;
+      if (!nomeModuloMap[aula.modulo]) {
+        nomeModuloMap[aula.modulo] = aula.nomeModulo;
       }
     }
   }
 
-  const modulos = Object.keys(nomeModuloMap).sort((a, b) => a - b);
+  const modulos = Object.keys(nomeModuloMap).sort((a,b)=>a-b);
 
   if (modulos.length <= 1) {
     moduloContainer.style.display = "none";
@@ -252,16 +270,25 @@ async function carregarAulas(user) {
 
   moduloContainer.style.display = "flex";
 
-  selectModulo.innerHTML = "";
+  menuModulo.innerHTML = "";
+
   modulos.forEach(mod => {
-    const option = document.createElement("option");
-    option.value = mod;
-    option.textContent = nomeModuloMap[mod];
-    selectModulo.appendChild(option);
+    const div = document.createElement("div");
+    div.className = "itemModulo";
+    div.innerText = nomeModuloMap[mod];
+
+    div.onclick = () => {
+      moduloAtual = mod;
+      localStorage.setItem("modulo_" + cursoId, mod);
+      menuModulo.style.display = "none";
+      renderAulas(userGlobal);
+    };
+
+    menuModulo.appendChild(div);
   });
 
-  const moduloSalvo = recuperarModulo();
-  moduloAtual = modulos.includes(moduloSalvo) ? moduloSalvo : modulos[0];
+  const salvo = localStorage.getItem("modulo_" + cursoId);
+  moduloAtual = modulos.includes(salvo) ? salvo : modulos[0];
 
   renderAulas(user);
 }
@@ -272,27 +299,25 @@ async function renderAulas(user) {
 
   if (moduloAtual !== null) {
     document.getElementById("tituloModulo").innerText = nomeModuloMap[moduloAtual];
-    selectModulo.value = moduloAtual;
   }
 
   let total = 0;
   let assistidas = 0;
-  let primeiraAula = null;
+  let primeira = null;
 
-  const aulasFiltradas = moduloAtual === null
+  const aulas = moduloAtual === null
     ? todasAulas
     : todasAulas.filter(a => a.modulo == moduloAtual);
 
-  const aulasOrdenadas = aulasFiltradas.sort((a, b) => a.ordem - b.ordem);
+  aulas.sort((a,b)=>a.ordem-b.ordem);
 
-  for (const aula of aulasOrdenadas) {
-
-    if (!primeiraAula) primeiraAula = aula;
+  for (const aula of aulas) {
+    if (!primeira) primeira = aula;
     total++;
 
     const progressoRef = doc(db, "progresso", user.uid, "cursos", cursoId, "aulas", aula.id);
-    const progressoSnap = await getDoc(progressoRef);
-    const assistido = progressoSnap.exists();
+    const snap = await getDoc(progressoRef);
+    const assistido = snap.exists();
     if (assistido) assistidas++;
 
     const div = document.createElement("div");
@@ -304,20 +329,17 @@ async function renderAulas(user) {
       <button class="assistir">Assistir</button>
     `;
 
-    const btn = div.querySelector("button.assistir");
-    btn.addEventListener("click", async () => {
+    div.querySelector("button").onclick = async () => {
       document.getElementById("player").src = `https://www.youtube.com/embed/${aula.videoId}`;
       await setDoc(progressoRef, { assistido: true });
       div.querySelector(".status").innerText = "✔ Assistido";
-      assistidas++;
-      document.getElementById("progressoTexto").innerText = `Progresso: ${assistidas} / ${total}`;
-    });
+    };
 
     lista.appendChild(div);
   }
 
-  if (primeiraAula) {
-    document.getElementById("player").src = `https://www.youtube.com/embed/${primeiraAula.videoId}`;
+  if (primeira) {
+    document.getElementById("player").src = `https://www.youtube.com/embed/${primeira.videoId}`;
   }
 
   document.getElementById("progressoTexto").innerText = `Progresso: ${assistidas} / ${total}`;
